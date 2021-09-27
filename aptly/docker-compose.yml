@@ -1,0 +1,10 @@
+version: '3.8'
+
+services:
+  aptly:
+    build:
+      context: .
+    restart: always
+    command: ["aptly", "api", "serve", "-listen=unix:///var/lib/aptly/aptly.sock", "-no-lock"]
+    volumes:
+      - .:/var/lib/aptly
