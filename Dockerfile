@@ -1,4 +1,4 @@
-ARG PYTHON_VERSION="3.9.4"
+ARG PYTHON_VERSION="3.9"
 ARG POETRY_VERSION="1.1.8"
 
 #### Python base
@@ -12,7 +12,7 @@ ENV PIP_NO_CACHE_DIR=off \
 
 ENV PATH="$POETRY_PATH/bin:$VENV_PATH/bin:$PATH"
 WORKDIR /wakemebot
-RUN apt-get update -qq && apt install -qq -yy curl git openssh-client aptly expect gnupg && \
+RUN apt-get update -qq && apt install -qq -yy curl git openssh-client expect gnupg && \
     rm -rf /var/lib/apt/lists/*
 
 #### Builder
