@@ -12,8 +12,16 @@ ENV PIP_NO_CACHE_DIR=off \
 
 ENV PATH="$POETRY_PATH/bin:$VENV_PATH/bin:$PATH"
 WORKDIR /wakemebot
-
-RUN apt-get update -qq && apt install -qq -yy curl git openssh-client expect gnupg unzip && \
+RUN apt-get update -qq && \
+    apt install -qq -yy \
+      dpkg-dev \
+      jq \
+      curl \
+      git \
+      openssh-client \
+      expect \
+      unzip \
+      gnupg && \
     rm -rf /var/lib/apt/lists/* && \
     ln -s $(which unzip) /bin/unzip # for ops2deb
 
