@@ -12,8 +12,17 @@ ENV PIP_NO_CACHE_DIR=off \
 
 ENV PATH="$POETRY_PATH/bin:$VENV_PATH/bin:$PATH"
 WORKDIR /wakemebot
-
-RUN apt-get update -qq && apt install -qq -yy curl git openssh-client expect gnupg unzip && \
+RUN apt-get update -qq && \
+    apt install -qq -yy \
+      dpkg-dev \
+      jq \
+      curl \
+      git \
+      openssh-client \
+      expect \
+      unzip \
+      debhelper \
+      gnupg && \
     rm -rf /var/lib/apt/lists/* && \
     ln -s $(which unzip) /bin/unzip # for ops2deb
 
@@ -34,6 +43,9 @@ FROM python_base as executor
 
 COPY --chown=1000:1000 --from=builder /wakemebot /wakemebot
 COPY --from=builder $VENV_PATH $VENV_PATH
+
+RUN groupadd --gid 1000 wakemebot \
+    && useradd --uid 1000 --gid wakemebot --shell /bin/bash --create-home wakemebot
 
 USER 1000
 WORKDIR /
