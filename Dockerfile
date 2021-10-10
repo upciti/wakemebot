@@ -21,6 +21,7 @@ RUN apt-get update -qq && \
       openssh-client \
       expect \
       unzip \
+      debhelper \
       gnupg && \
     rm -rf /var/lib/apt/lists/* && \
     ln -s $(which unzip) /bin/unzip # for ops2deb
