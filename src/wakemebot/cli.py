@@ -33,7 +33,7 @@ def aptly_push(
     ),
     packages: List[str] = typer.Argument(..., help="List of packages to upload"),
     retain: int = typer.Option(
-        3, help="For each package, how many versions will be kept"
+        100, help="For each package, how many versions will be kept"
     ),
     server: str = typer.Option(
         "/var/lib/aptly/aptly.sock", help="Path to server unix socket"
