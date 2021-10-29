@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import List
 
 from ops2deb import generator, parser
+from ops2deb.parser import Blueprint
 
 
 @dataclass
@@ -15,7 +16,7 @@ class Package:
 
 
 @lru_cache
-def parse(file: Path):
+def parse(file: Path) -> List[Blueprint]:
     return parser.parse(file).__root__
 
 
@@ -28,7 +29,7 @@ def match(blueprint: parser.Blueprint, packages: List[Package]) -> bool:
     return False
 
 
-def generate(ops2deb_config: Path, repo_state: Path):
+def generate(ops2deb_config: Path, repo_state: Path) -> None:
     # Packages available in the repo
     packages: List[Package] = [Package(*p) for p in json.load(repo_state.open("r"))]
 
@@ -36,4 +37,4 @@ def generate(ops2deb_config: Path, repo_state: Path):
     blueprints = parse(ops2deb_config)
     blueprints = [b for b in blueprints if not match(b, packages)]
 
-    generator.generate(blueprints)
+    generator.generate(blueprints, Path("output"))
