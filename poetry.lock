@@ -253,7 +253,7 @@ python-versions = "*"
 
 [[package]]
 name = "ops2deb"
-version = "0.6.1"
+version = "0.7.0"
 description = "Build debian packages"
 category = "main"
 optional = false
@@ -535,7 +535,7 @@ python-versions = "*"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9"
-content-hash = "9339406256f7cbf12cf0b74339341a191f0846c5df9826359ad65fff2708e240"
+content-hash = "76bfe85c025b535eb94506a942a5c7843ce911ca094f2c97fca1697e89039ddc"
 
 [metadata.files]
 aiofiles = [
@@ -731,8 +731,8 @@ mypy-extensions = [
     {file = "mypy_extensions-0.4.3.tar.gz", hash = "sha256:2d82818f5bb3e369420cb3c4060a7970edba416647068eb4c5343488a6c604a8"},
 ]
 ops2deb = [
-    {file = "ops2deb-0.6.1-py3-none-any.whl", hash = "sha256:ac3c0b93c23d9e14534bea50980e6c384ba060b74a2cf040d631892cff3caa3a"},
-    {file = "ops2deb-0.6.1.tar.gz", hash = "sha256:3f031b6fbad3bf47b6af5f0d5d82f23d3a4ef948a06d57daef08179e1b698e2d"},
+    {file = "ops2deb-0.7.0-py3-none-any.whl", hash = "sha256:a1a961a4bd3c42017bcdd2b145c486dd59b735366c7f53111b948ff1a3eb80e7"},
+    {file = "ops2deb-0.7.0.tar.gz", hash = "sha256:404de61c31e97c0b189563d67575f7c8c6d4a665a9a3623271564d59ae0216f5"},
 ]
 packaging = [
     {file = "packaging-21.2-py3-none-any.whl", hash = "sha256:14317396d1e8cdb122989b916fa2c7e9ca8e2be9e8060a6eff75b6b7b4d8a7e0"},
