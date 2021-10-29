@@ -29,7 +29,7 @@ def match(blueprint: parser.Blueprint, packages: List[Package]) -> bool:
     return False
 
 
-def generate(ops2deb_config: Path, repo_state: Path) -> None:
+def generate(ops2deb_config: Path, repo_state: Path, work_directory: Path) -> None:
     # Packages available in the repo
     packages: List[Package] = [Package(*p) for p in json.load(repo_state.open("r"))]
 
@@ -37,4 +37,4 @@ def generate(ops2deb_config: Path, repo_state: Path) -> None:
     blueprints = parse(ops2deb_config)
     blueprints = [b for b in blueprints if not match(b, packages)]
 
-    generator.generate(blueprints, Path("output"))
+    generator.generate(blueprints, work_directory)
