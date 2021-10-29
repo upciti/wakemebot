@@ -4,24 +4,24 @@ import uuid
 from contextlib import contextmanager
 from functools import cmp_to_key
 from pathlib import Path
-from typing import List
+from typing import Iterator, List
 
 import httpx
 from debian.debian_support import version_compare
 
 
-def sort_cmp(p1, p2):
+def sort_cmp(p1: str, p2: str) -> int:
     v1 = p1.split(" ")[2]
     v2 = p2.split(" ")[2]
     return version_compare(v1, v2)
 
 
-def client_factory(server: str):
+def client_factory(server: str) -> httpx.Client:
     transport = httpx.HTTPTransport(uds=server, retries=2)
     return httpx.Client(transport=transport, base_url="http://aptly/api")
 
 
-def purge(client, repo, name, retain_how_many):
+def purge(client: httpx.Client, repo: str, name: str, retain_how_many: int) -> None:
     data = client.get(f"/repos/{repo}/packages").json()
     data = list(filter(lambda x: x.split(" ")[1] == name, data))
     data = sorted(data, key=cmp_to_key(sort_cmp))
@@ -32,14 +32,14 @@ def purge(client, repo, name, retain_how_many):
             f"the following packages are going to be removed from {repo}: {should_delete}"
         )
         data = {"PackageRefs": should_delete}
-        response = client.delete(f"/repos/{repo}/packages", data=data)
+        response = client.request("DELETE", f"/repos/{repo}/packages", json=data)
         response.raise_for_status()
     else:
         print(f"no version of {name} deleted in {repo}")
 
 
 @contextmanager
-def upload_directory(client: httpx.Client):
+def upload_directory(client: httpx.Client) -> Iterator[str]:
     directory = str(uuid.uuid4())
     yield directory
     response = client.delete(f"/files/{directory}")
@@ -47,7 +47,7 @@ def upload_directory(client: httpx.Client):
         print(f"failed to remove upload directory: {directory}")
 
 
-def upload_packages(client: httpx.Client, packages: List[Path], repos: List[str]):
+def upload_packages(client: httpx.Client, packages: List[Path], repos: List[str]) -> None:
     with upload_directory(client) as directory:
         files = {file.name: file.open("rb") for file in packages}
         print(f"uploading {len(packages)} packages to directory {directory}")
@@ -59,7 +59,7 @@ def upload_packages(client: httpx.Client, packages: List[Path], repos: List[str]
             response.raise_for_status()
 
 
-def push(repo_pattern: str, packages: List[Path], retain: int, server: str):
+def push(repo_pattern: str, packages: List[Path], retain: int, server: str) -> None:
     client = client_factory(server)
     repo_pattern_re = re.compile(repo_pattern)
 
@@ -78,7 +78,7 @@ def push(repo_pattern: str, packages: List[Path], retain: int, server: str):
             purge(client, repo, name, retain)
 
 
-def export(repo: str, server: str, short: bool):
+def export(repo: str, server: str, short: bool) -> None:
     client = client_factory(server)
     response = client.get(f"/repos/{repo}/packages{'' if short else '?format=details'}")
     response.raise_for_status()
