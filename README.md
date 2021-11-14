@@ -8,13 +8,6 @@ Bunch of tools needed in [wakemeops](https://github.com/upciti/wakemeops) CI pip
 
 ## Usage examples
 
-This should only build kustomize and helmfile because they do not appear in repository state file:
-
-```shell
-poetry run wakemebot generate ops2deb.yml repo-state-example.json
-poetry run ops2deb build
-```
-
 Start aptly sandbox, create a repo, push packages:
 
 ```shell
@@ -25,8 +18,3 @@ cd ..
 poetry run wakemebot aptly push wakemeops-devops output/*.deb --server aptly/aptly.sock
 ```
 
-Get repo state file:
-
-```shell
-poetry run wakemebot aptly export wakemeops-devops --server aptly/aptly.sock
-```

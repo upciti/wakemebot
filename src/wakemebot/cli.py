@@ -3,25 +3,10 @@ from typing import List
 
 import typer
 
-from wakemebot import aptly, generator
+from wakemebot import aptly
 
 app = typer.Typer()
 aptly_app = typer.Typer()
-
-
-@app.command(help="Generate debian sources packages using last git commit")
-def generate(
-    ops2deb_config: Path = typer.Argument(..., help="Path to ops2deb configuration file"),
-    repo_state: Path = typer.Argument(..., help="Path to repo state file"),
-    work_directory: Path = typer.Option(
-        "output",
-        "--work-dir",
-        "-w",
-        envvar="OPS2DEB_WORK_DIR",
-        help="Directory where debian source packages are generated and built.",
-    ),
-) -> None:
-    generator.generate(ops2deb_config, repo_state, work_directory)
 
 
 @aptly_app.command(

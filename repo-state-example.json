@@ -1,1 +1,0 @@
-[["amd64", "kubectl", "1.20.1-1~ops2deb"], ["amd64", "kubeseal", "0.13.1-1~ops2deb"], ["amd64", "kustomize", "3.8.8-1~ops2deb"], ["amd64", "minikube", "1.16.0-1~ops2deb"], ["amd64", "helm", "3.4.2-1~ops2deb"], ["amd64", "helmfile", "0.135.0-1~ops2deb"], ["amd64", "istioctl", "1.6.13-1~ops2deb"], ["amd64", "istioctl", "1.8.1-1~ops2deb"]]
