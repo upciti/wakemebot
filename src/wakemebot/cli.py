@@ -3,10 +3,15 @@ from typing import List
 
 import typer
 
-from wakemebot import aptly
+from wakemebot import aptly, docs
 
 app = typer.Typer()
 aptly_app = typer.Typer()
+
+
+@app.command(name="docs", help="Update documentation")
+def update_documentation() -> None:
+    docs.update_documentation()
 
 
 @aptly_app.command(
