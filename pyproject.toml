@@ -25,6 +25,8 @@ pydantic = "^1.8.2"
 ops2deb = "0.9.0"
 python-debian = "^0.1.40"
 Jinja2 = "^3.0.3"
+mkdocs = "^1.2.3"
+mkdocs-material = "^8.0.1"
 
 [tool.poetry.scripts]
 wakemebot = "wakemebot.cli:main"
