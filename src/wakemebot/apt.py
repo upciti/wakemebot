@@ -75,10 +75,7 @@ def _build_repository_component(
     )
 
 
-def parse_repository(
-    repository_url: str,
-    distribution: str,
-) -> Repository:
+def parse_repository(repository_url: str, distribution: str) -> Repository:
     with httpx.Client(base_url=repository_url) as client:
         release = _download_repository_release_file(client, distribution)
         architectures = release["Architectures"].split(" ")

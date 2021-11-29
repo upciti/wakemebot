@@ -5,5 +5,5 @@
 
 {{ package.description }}
 
-<span class="badge arch">amd64</span> {% for version in package.versions|map(attribute="upstream_version") %}<span class="badge version">{{ version }}</span> {% endfor %}
+<span class="badge arch">amd64</span> {% for version in package.versions|map(attribute="upstream_version") %}<span class="badge version">{{ version }}</span>{{ " " if not loop.last else "" }}{% endfor %}
 {% endfor %}

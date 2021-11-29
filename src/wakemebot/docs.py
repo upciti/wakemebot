@@ -31,8 +31,8 @@ def update_section(section_name: str, content: Any) -> None:
             file_.write_text(output)
 
 
-def update_documentation() -> None:
-    repository = parse_repository("http://deb.wakemeops.com", "stable")
+def update_documentation(repository_url: str, distribution: str) -> None:
+    repository = parse_repository(repository_url, distribution)
     update_section("package_count", repository.package_count)
     for component in repository.components:
         template = _environment.get_template("component.md")
