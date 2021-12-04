@@ -1,5 +1,6 @@
 import json
 import re
+import sys
 import uuid
 from contextlib import contextmanager
 from functools import cmp_to_key
@@ -62,6 +63,11 @@ def upload_packages(client: httpx.Client, packages: List[Path], repos: List[str]
 def push(repo_pattern: str, packages: List[Path], retain: int, server: str) -> None:
     client = client_factory(server)
     repo_pattern_re = re.compile(repo_pattern)
+
+    for file in packages:
+        if file.is_file() is False:
+            print(f"{file} does not exist or is not a file")
+            sys.exit(1)
 
     # List repos matching pattern
     repos = [r["Name"] for r in client.get("/repos").json()]
