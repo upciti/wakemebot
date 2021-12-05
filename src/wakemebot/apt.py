@@ -10,7 +10,7 @@ from debian.debian_support import Version
 @dataclass
 class RepositoryPackage:
     name: str
-    versions: List[Version]
+    versions: List[str]
     summary: str
     description: str
     homepage: str
@@ -60,7 +60,9 @@ def _parse_repository_packages_file(content: bytes) -> Iterator[RepositoryPackag
                 description="\n".join(src["Description"].split("\n")[1:]),
                 homepage=src.get("Homepage", None),
             )
-        packages[package_name].versions.append(Version(src["Version"]))
+        version = Version(src["Version"]).upstream_version
+        if version is not None and version not in packages[package_name].versions:
+            packages[package_name].versions.append(version)
     for _, package in packages.items():
         yield package
 
