@@ -30,13 +30,13 @@ def purge(client: httpx.Client, repo: str, name: str, retain_how_many: int) -> N
 
     if should_delete:
         print(
-            f"the following packages are going to be removed from {repo}: {should_delete}"
+            f"The following packages are going to be removed from {repo}: {should_delete}"
         )
         data = {"PackageRefs": should_delete}
         response = client.request("DELETE", f"/repos/{repo}/packages", json=data)
         response.raise_for_status()
     else:
-        print(f"no version of {name} deleted in {repo}")
+        print(f"No version of {name} deleted in {repo}")
 
 
 @contextmanager
@@ -45,13 +45,13 @@ def upload_directory(client: httpx.Client) -> Iterator[str]:
     yield directory
     response = client.delete(f"/files/{directory}")
     if response.status_code != 200:
-        print(f"failed to remove upload directory: {directory}")
+        print(f"Failed to remove upload directory: {directory}")
 
 
 def upload_packages(client: httpx.Client, packages: List[Path], repos: List[str]) -> None:
     with upload_directory(client) as directory:
         files = {file.name: file.open("rb") for file in packages}
-        print(f"uploading {len(packages)} packages to directory {directory}")
+        print(f"Uploading {len(packages)} packages to directory {directory}")
         response = client.post(f"/files/{directory}", files=files)
         response.raise_for_status()
         for repo in repos:
@@ -60,19 +60,24 @@ def upload_packages(client: httpx.Client, packages: List[Path], repos: List[str]
             response.raise_for_status()
 
 
-def push(repo_pattern: str, packages: List[Path], retain: int, server: str) -> None:
+def push(repo_pattern: str, package_directory: Path, retain: int, server: str) -> None:
     client = client_factory(server)
     repo_pattern_re = re.compile(repo_pattern)
 
-    for file in packages:
-        if file.is_file() is False:
-            print(f"{file} does not exist or is not a file")
-            sys.exit(1)
+    if package_directory.is_dir() is False:
+        print(f"{package_directory} is not a directory")
+        sys.exit(1)
+
+    packages = list(package_directory.glob("*.deb"))
+    print(f"Found {len(packages)} packages in {package_directory}")
+
+    if not packages:
+        return
 
     # List repos matching pattern
     repos = [r["Name"] for r in client.get("/repos").json()]
     repos = [r for r in repos if repo_pattern_re.match(r)]
-    print(f"pattern matches the following repositories: {repos})")
+    print(f"Pattern matches the following repositories: {repos})")
 
     if not repos:
         return

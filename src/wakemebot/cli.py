@@ -1,6 +1,5 @@
 import sys
 from pathlib import Path
-from typing import List
 
 import typer
 from pydantic import BaseModel, Field, HttpUrl, ValidationError
@@ -51,7 +50,9 @@ def aptly_push(
     repo_pattern: str = typer.Argument(
         ..., help="Pattern matched against the list of aptly repositories"
     ),
-    packages: List[str] = typer.Argument(..., help="List of packages to upload"),
+    package_directory: Path = typer.Argument(
+        ..., help="A directory containing debian packages to upload"
+    ),
     retain: int = typer.Option(
         100, help="For each package, how many versions will be kept"
     ),
@@ -59,7 +60,7 @@ def aptly_push(
         "/var/lib/aptly/aptly.sock", help="Path to server unix socket"
     ),
 ) -> None:
-    aptly.push(repo_pattern, [Path(p) for p in packages], retain, server)
+    aptly.push(repo_pattern, package_directory, retain, server)
 
 
 @aptly_app.command(name="export", help="Save repo package list as JSON")
