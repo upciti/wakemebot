@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from functools import lru_cache
-from typing import Any, Dict, Iterator, List
+from typing import Dict, Iterator, List
 
 import httpx
 from debian.deb822 import Packages, Release
@@ -13,6 +13,7 @@ class RepositoryPackage:
     versions: List[Version]
     summary: str
     description: str
+    homepage: str
 
 
 @dataclass
@@ -48,17 +49,20 @@ def _download_repository_packages_file(
 
 def _parse_repository_packages_file(content: bytes) -> Iterator[RepositoryPackage]:
     """Extract package names and versions from a repo Packages file"""
-    packages: Dict[str, Dict[str, Any]] = {}
+    packages: Dict[str, RepositoryPackage] = {}
     for src in Packages.iter_paragraphs(content, use_apt_pkg=False):
         package_name = src["Package"]
         if package_name not in packages.keys():
-            packages[package_name] = {"description": src["Description"], "versions": []}
-        packages[package_name]["versions"].append(Version(src["Version"]))
-    for name, info in packages.items():
-        description_lines = info["description"].split("\n")
-        summary = description_lines[0]
-        description = "\n".join(description_lines[1:])
-        yield RepositoryPackage(name, info["versions"], summary, description)
+            packages[package_name] = RepositoryPackage(
+                name=package_name,
+                versions=[],
+                summary=src["Description"][0],
+                description="\n".join(src["Description"].split("\n")[1:]),
+                homepage=src.get("Homepage", None),
+            )
+        packages[package_name].versions.append(Version(src["Version"]))
+    for _, package in packages.items():
+        yield package
 
 
 def _build_repository_component(

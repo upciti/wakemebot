@@ -1,7 +1,7 @@
 # {{ component.name|capitalize }} - {{ component.package_count }} packages
 
 {% for package in component.packages %}
-## {{ package.name }}
+## {% if package.homepage %}[{{ package.name }}]({{ package.homepage }}){% else %}{{ package.name }}{% endif %}
 
 {{ package.description }}
 
