@@ -3,18 +3,29 @@ import re
 import sys
 import uuid
 from contextlib import contextmanager
+from dataclasses import dataclass
 from functools import cmp_to_key
+from itertools import groupby
 from pathlib import Path
-from typing import Iterator, List
+from typing import Iterator, List, Set
 
 import httpx
-from debian.debian_support import version_compare
+from debian.debian_support import Version, version_compare
 
 
-def sort_cmp(p1: str, p2: str) -> int:
-    v1 = p1.split(" ")[2]
-    v2 = p2.split(" ")[2]
-    return version_compare(v1, v2)
+@dataclass(frozen=True)
+class Package:
+    arch: str
+    name: str
+    version: str
+    uid: str
+
+    def __str__(self) -> str:
+        return f"P{self.arch} {self.name} {self.version} {self.uid}"
+
+
+def sort_cmp(p1: Package, p2: Package) -> int:
+    return version_compare(p1.version, p2.version)
 
 
 def client_factory(server: str) -> httpx.Client:
@@ -22,21 +33,49 @@ def client_factory(server: str) -> httpx.Client:
     return httpx.Client(transport=transport, base_url="http://aptly/api")
 
 
-def purge(client: httpx.Client, repo: str, name: str, retain_how_many: int) -> None:
-    data = client.get(f"/repos/{repo}/packages").json()
-    data = list(filter(lambda x: x.split(" ")[1] == name, data))
-    data = sorted(data, key=cmp_to_key(sort_cmp))
-    should_delete = data[:-retain_how_many]
+def parse_packages(data: List[str]) -> List[Package]:
+    data = [p[1:] for p in data if p[0] == "P"]
+    return [Package(*p.split(" ")) for p in data]
 
-    if should_delete:
-        print(
-            f"The following packages are going to be removed from {repo}: {should_delete}"
-        )
-        data = {"PackageRefs": should_delete}
-        response = client.request("DELETE", f"/repos/{repo}/packages", json=data)
-        response.raise_for_status()
-    else:
-        print(f"No version of {name} deleted in {repo}")
+
+def list_packages(client: httpx.Client, repo: str) -> List[Package]:
+    data = client.get(f"/repos/{repo}/packages").json()
+    return parse_packages(data)
+
+
+def purge_old_versions(packages: List[Package], retain_how_many: int) -> List[Package]:
+    """Only keep retain_how_many versions of a package"""
+    packages = sorted(packages, key=cmp_to_key(sort_cmp))
+    should_delete = packages[:-retain_how_many]
+    return should_delete
+
+
+def purge_old_revisions(packages: List[Package]) -> List[Package]:
+    """Only keep the latest package revision"""
+    should_delete: List[Package] = []
+    for key, group in groupby(packages, lambda x: Version(x.version).upstream_version):
+        package_group = sorted(group, key=cmp_to_key(sort_cmp))
+        should_delete.extend(package_group[:-1])
+    return should_delete
+
+
+def delete_packages(client: httpx.Client, packages: Set[Package], repo: str) -> None:
+    if not packages:
+        return
+    packages_str = [str(p) for p in sorted(packages, key=cmp_to_key(sort_cmp))]
+    print(f"The following packages are going to be removed from {repo}: {packages_str}")
+    data = {"PackageRefs": packages_str}
+    response = client.request("DELETE", f"/repos/{repo}/packages", json=data)
+    response.raise_for_status()
+
+
+def purge(client: httpx.Client, repo: str, names: Set[str], retain_how_many: int) -> None:
+    all_packages = list_packages(client, repo)
+    for name in names:
+        packages = list(filter(lambda x: x.name == name, all_packages))
+        should_delete = set(purge_old_revisions(packages))
+        should_delete.update(purge_old_versions(packages, retain_how_many))
+        delete_packages(client, should_delete, repo)
 
 
 @contextmanager
@@ -85,8 +124,7 @@ def push(repo_pattern: str, package_directory: Path, retain: int, server: str) -
     upload_packages(client, packages, repos)
     names = {file.name.split("_")[0] for file in packages}
     for repo in repos:
-        for name in names:
-            purge(client, repo, name, retain)
+        purge(client, repo, names, retain)
 
 
 def export(repo: str, server: str, short: bool) -> None:

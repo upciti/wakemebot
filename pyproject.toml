@@ -43,8 +43,8 @@ isort = "^5.8.0"
 [tool.taskipy.tasks]
 check = """
 isort src tests\
- && black .\
- && flake8 src\
+ && black src tests\
+ && flake8 src tests\
  && mypy src\
  && pytest --cov src tests\
 """
