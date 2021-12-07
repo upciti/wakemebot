@@ -15,6 +15,13 @@ cd aptly
 docker-compose up
 docker-compose exec aptly aptly repo create wakemeops-devops
 cd ..
-poetry run wakemebot aptly push wakemeops-devops output/*.deb --server aptly/aptly.sock
+poetry run wakemebot aptly push wakemeops-devops output --server aptly/aptly.sock
+```
+
+Update wakemeops documentation:
+
+```shell
+cd wakemeops
+wakemebot docs
 ```
 

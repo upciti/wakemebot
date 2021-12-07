@@ -1,5 +1,4 @@
 import json
-import re
 import sys
 import uuid
 from contextlib import contextmanager
@@ -87,21 +86,18 @@ def upload_directory(client: httpx.Client) -> Iterator[str]:
         print(f"Failed to remove upload directory: {directory}")
 
 
-def upload_packages(client: httpx.Client, packages: List[Path], repos: List[str]) -> None:
+def upload_packages(client: httpx.Client, packages: List[Path], repo: str) -> None:
     with upload_directory(client) as directory:
         files = {file.name: file.open("rb") for file in packages}
         print(f"Uploading {len(packages)} packages to directory {directory}")
         response = client.post(f"/files/{directory}", files=files)
         response.raise_for_status()
-        for repo in repos:
-            # Add packages to repo
-            response = client.post(f"/repos/{repo}/file/{directory}?noRemove=1")
-            response.raise_for_status()
+        response = client.post(f"/repos/{repo}/file/{directory}?noRemove=1")
+        response.raise_for_status()
 
 
-def push(repo_pattern: str, package_directory: Path, retain: int, server: str) -> None:
+def push(repo: str, package_directory: Path, retain: int, server: str) -> None:
     client = client_factory(server)
-    repo_pattern_re = re.compile(repo_pattern)
 
     if package_directory.is_dir() is False:
         print(f"{package_directory} is not a directory")
@@ -115,13 +111,12 @@ def push(repo_pattern: str, package_directory: Path, retain: int, server: str) -
 
     # List repos matching pattern
     repos = [r["Name"] for r in client.get("/repos").json()]
-    repos = [r for r in repos if repo_pattern_re.match(r)]
-    print(f"Pattern matches the following repositories: {repos})")
 
-    if not repos:
+    if repo not in repos:
+        print(f"Aptly repository {repo} not found.")
         return
 
-    upload_packages(client, packages, repos)
+    upload_packages(client, packages, repo)
     names = {file.name.split("_")[0] for file in packages}
     for repo in repos:
         purge(client, repo, names, retain)
