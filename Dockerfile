@@ -44,8 +44,8 @@ FROM python_base as executor
 COPY --chown=1000:1000 --from=builder /wakemebot /wakemebot
 COPY --from=builder $VENV_PATH $VENV_PATH
 
-RUN groupadd --gid 1000 wakemebot \
-    && useradd --uid 1000 --gid wakemebot --shell /bin/bash --create-home wakemebot
+RUN groupadd --gid 1003 wakemebot \
+    && useradd --uid 1003 --gid wakemebot --shell /bin/bash --create-home wakemebot
 
-USER 1000
+USER 1003
 WORKDIR /
