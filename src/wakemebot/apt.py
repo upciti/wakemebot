@@ -56,7 +56,7 @@ def _parse_repository_packages_file(content: bytes) -> Iterator[RepositoryPackag
             packages[package_name] = RepositoryPackage(
                 name=package_name,
                 versions=[],
-                summary=src["Description"][0],
+                summary=src["Description"].split("\n")[0],
                 description="\n".join(src["Description"].split("\n")[1:]),
                 homepage=src.get("Homepage", None),
             )
