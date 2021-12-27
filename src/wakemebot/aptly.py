@@ -3,13 +3,15 @@ import sys
 import uuid
 from contextlib import contextmanager
 from dataclasses import dataclass
-from functools import cmp_to_key
+from functools import cmp_to_key, partial
 from itertools import groupby
+from operator import attrgetter
 from pathlib import Path
-from typing import Iterator, List, Set
+from typing import Callable, Iterator, List, Set
 
 import httpx
 from debian.debian_support import Version, version_compare
+from semver.version import Version as Semver
 
 
 @dataclass(frozen=True)
@@ -18,6 +20,10 @@ class Package:
     name: str
     version: str
     uid: str
+
+    @property
+    def upstream_version(self) -> str:
+        return Version(self.version).upstream_version or ""
 
     def __str__(self) -> str:
         return f"P{self.arch} {self.name} {self.version} {self.uid}"
@@ -43,19 +49,62 @@ def list_packages(client: httpx.Client, repo: str) -> List[Package]:
 
 
 def purge_old_versions(packages: List[Package], retain_how_many: int) -> List[Package]:
-    """Only keep retain_how_many versions of a package"""
-    packages = sorted(packages, key=cmp_to_key(sort_cmp))
+    """
+    Only keep retain_how_many versions of a package.
+    Assumes packages have the same name and arch, and are sorted by versions.
+    """
     should_delete = packages[:-retain_how_many]
     return should_delete
 
 
 def purge_old_revisions(packages: List[Package]) -> List[Package]:
-    """Only keep the latest package revision"""
+    """
+    Only keep the latest package revision.
+    Assumes packages have the same name and arch, and are sorted by versions.
+    """
     should_delete: List[Package] = []
-    for key, group in groupby(packages, lambda x: Version(x.version).upstream_version):
+    for key, group in groupby(packages, attrgetter("upstream_version")):
         package_group = sorted(group, key=cmp_to_key(sort_cmp))
         should_delete.extend(package_group[:-1])
     return should_delete
+
+
+def purge_old_patches(packages: List[Package]) -> List[Package]:
+    """
+    Only keep the most recent patch for packages using semantic versioning.
+    Example: if we have two releases with version 2.1.1 and 2.2.2, 2.2.1 will be removed.
+    Assumes packages have the same name and arch, and are sorted by versions.
+    """
+    should_delete: List[Package] = []
+    packages = [p for p in packages if Semver.isvalid(p.upstream_version)]
+
+    def group_by_key(package: Package) -> Semver:
+        return Semver.parse(package.upstream_version).next_version(part="minor")
+
+    for key, group in groupby(packages, key=group_by_key):
+        package_group = sorted(group, key=cmp_to_key(sort_cmp))
+        should_delete.extend(package_group[:-1])
+
+    return should_delete
+
+
+def purge_old_packages(packages: List[Package], retain_how_many: int) -> Set[Package]:
+    """
+    Call the three purge functions defined above.
+    Assumes packages have the same name and arch.
+    """
+    # packages are only sorted once here
+    packages = sorted(packages, key=cmp_to_key(sort_cmp))
+    packages_to_delete: Set[Package] = set()
+    purge_functions: List[Callable[[List[Package]], List[Package]]] = [
+        purge_old_revisions,
+        purge_old_patches,
+        partial(purge_old_versions, retain_how_many=retain_how_many),
+    ]
+    for purge_function in purge_functions:
+        packages_to_delete.update(purge_function(packages))
+        packages = [p for p in packages if p not in packages_to_delete]
+    return packages_to_delete
 
 
 def delete_packages(client: httpx.Client, packages: Set[Package], repo: str) -> None:
@@ -70,11 +119,11 @@ def delete_packages(client: httpx.Client, packages: Set[Package], repo: str) -> 
 
 def purge(client: httpx.Client, repo: str, names: Set[str], retain_how_many: int) -> None:
     all_packages = list_packages(client, repo)
+    packages_to_delete: Set[Package] = set()
     for name in names:
         packages = list(filter(lambda x: x.name == name, all_packages))
-        should_delete = set(purge_old_revisions(packages))
-        should_delete.update(purge_old_versions(packages, retain_how_many))
-        delete_packages(client, should_delete, repo)
+        packages_to_delete.update(purge_old_packages(packages, retain_how_many))
+    delete_packages(client, packages_to_delete, repo)
 
 
 @contextmanager

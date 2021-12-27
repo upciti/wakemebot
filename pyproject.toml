@@ -27,6 +27,7 @@ python-debian = "^0.1.40"
 Jinja2 = "^3.0.3"
 mkdocs = "^1.2.3"
 mkdocs-material = "^8.0.1"
+semver = "3.0.0-dev.2"
 
 [tool.poetry.scripts]
 wakemebot = "wakemebot.cli:main"
