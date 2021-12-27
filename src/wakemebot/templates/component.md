@@ -7,5 +7,7 @@ __{{ package.summary }}__
 
 {{ package.description }}
 
-<span class="badge arch">amd64</span> {% for version in package.versions %}<span class="badge version">{{ version }}</span>{{ " " if not loop.last else "" }}{% endfor %}
+{% for arch, versions in package.versions.items() %}
+<span class="badge arch">{{ arch }}</span> {% for version in versions %}<span class="badge version">{{ version }}</span>{{ " " if not loop.last else "" }}{% endfor %}
+{% endfor %}
 {% endfor %}

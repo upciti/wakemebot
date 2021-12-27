@@ -1,6 +1,6 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from functools import lru_cache
-from typing import Dict, Iterator, List
+from typing import Dict, List
 
 import httpx
 from debian.deb822 import Packages, Release
@@ -10,10 +10,10 @@ from debian.debian_support import Version
 @dataclass
 class RepositoryPackage:
     name: str
-    versions: List[str]
     summary: str
     description: str
     homepage: str
+    versions: Dict[str, List[str]] = field(default_factory=dict)  # versions per arch
 
 
 @dataclass
@@ -47,37 +47,39 @@ def _download_repository_packages_file(
         return response.read()
 
 
-def _parse_repository_packages_file(content: bytes) -> Iterator[RepositoryPackage]:
+def _parse_repository_packages_file(
+    content: bytes, packages: Dict[str, RepositoryPackage]
+) -> None:
     """Extract package names and versions from a repo Packages file"""
-    packages: Dict[str, RepositoryPackage] = {}
     for src in Packages.iter_paragraphs(content, use_apt_pkg=False):
         package_name = src["Package"]
         if package_name not in packages.keys():
             packages[package_name] = RepositoryPackage(
-                name=package_name,
-                versions=[],
-                summary=src["Description"].split("\n")[0],
                 description="\n".join(src["Description"].split("\n")[1:]),
                 homepage=src.get("Homepage", None),
+                name=package_name,
+                summary=src["Description"].split("\n")[0],
             )
+        architecture = src["Architecture"]
         version = Version(src["Version"]).upstream_version
-        if version is not None and version not in packages[package_name].versions:
-            packages[package_name].versions.append(version)
-    for _, package in packages.items():
-        yield package
+        if architecture not in packages[package_name].versions:
+            packages[package_name].versions[architecture] = []
+        package_versions = packages[package_name].versions[architecture]
+        if version is not None and version not in package_versions:
+            package_versions.append(version)
 
 
 def _build_repository_component(
     client: httpx.Client, component: str, architectures: List[str]
 ) -> RepositoryComponent:
-    packages: List[RepositoryPackage] = []
+    packages: Dict[str, RepositoryPackage] = {}
     for architecture in architectures:
         content = _download_repository_packages_file(
             client, "stable", component, architecture
         )
-        packages.extend(_parse_repository_packages_file(content))
+        _parse_repository_packages_file(content, packages)
     return RepositoryComponent(
-        name=component, packages=packages, package_count=len(packages)
+        name=component, packages=list(packages.values()), package_count=len(packages)
     )
 
 
