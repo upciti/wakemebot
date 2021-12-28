@@ -1,17 +1,33 @@
+#### Builder
 ARG PYTHON_VERSION="3.9"
-ARG POETRY_VERSION="1.1.8"
+FROM python:${PYTHON_VERSION}-slim as builder
 
-#### Python base
-FROM python:${PYTHON_VERSION}-slim as python_base
+ENV PIP_DEFAULT_TIMEOUT=100 \
+    POETRY_HOME=/opt/poetry \
+    POETRY_VIRTUALENVS_IN_PROJECT=true \
+    POETRY_VERSION=1.1.8
 
-ENV PIP_NO_CACHE_DIR=off \
-    POETRY_PATH=/opt/poetry \
-    PIP_DEFAULT_TIMEOUT=100 \
-    VENV_PATH=/opt/venv \
-    POETRY_VERSION=${POETRY_VERSION}
+ENV PATH="$POETRY_HOME/bin:$PATH"
 
-ENV PATH="$POETRY_PATH/bin:$VENV_PATH/bin:$PATH"
 WORKDIR /wakemebot
+
+RUN apt-get update -qq && \
+    apt install -qq -yy curl && \
+    rm -rf /var/lib/apt/lists/*
+
+RUN curl -ssL https://raw.githubusercontent.com/sdispater/poetry/master/get-poetry.py | python
+
+COPY poetry.lock pyproject.toml README.md ./
+RUN poetry install --no-dev --no-interaction --no-ansi --no-root
+
+COPY src src
+RUN poetry install --no-dev --no-interaction --no-ansi
+
+#### CI Executor
+FROM python:${PYTHON_VERSION}-slim as executor
+
+ENV PATH="/wakemebot/.venv/bin:$PATH"
+
 RUN apt-get update -qq && \
     apt install -qq -yy \
       dpkg-dev \
@@ -23,29 +39,11 @@ RUN apt-get update -qq && \
       unzip \
       debhelper \
       gnupg && \
-    rm -rf /var/lib/apt/lists/* && \
-    ln -s $(which unzip) /bin/unzip # for ops2deb
+    rm -rf /var/lib/apt/lists/*
 
-#### Builder
-FROM python_base as builder
+COPY --from=builder /wakemebot /wakemebot
 
-RUN curl -ssL https://raw.githubusercontent.com/sdispater/poetry/master/get-poetry.py | python && \
-    python -m venv $VENV_PATH && \
-    mv /root/.poetry $POETRY_PATH && \
-    poetry config virtualenvs.create false
-
-COPY poetry.lock pyproject.toml README.md .
-COPY src src
-RUN poetry install --no-dev --no-interaction --no-ansi -vvv
-
-#### CI Executor
-FROM python_base as executor
-
-COPY --chown=1000:1000 --from=builder /wakemebot /wakemebot
-COPY --from=builder $VENV_PATH $VENV_PATH
-
-RUN groupadd --gid 1003 wakemebot \
-    && useradd --uid 1003 --gid wakemebot --shell /bin/bash --create-home wakemebot
+RUN groupadd --gid 1003 wakemebot && \
+    useradd --uid 1003 --gid wakemebot --create-home wakemebot
 
 USER 1003
-WORKDIR /
