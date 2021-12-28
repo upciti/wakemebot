@@ -30,7 +30,9 @@ RUN install_packages \
     expect \
     unzip \
     debhelper \
-    gnupg
+    gnupg \
+    fakeroot \
+    build-essential
 
 ENV PATH="/wakemebot/.venv/bin:$PATH"
 
