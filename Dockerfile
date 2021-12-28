@@ -1,21 +1,12 @@
 #### Builder
-ARG PYTHON_VERSION="3.9"
-FROM python:${PYTHON_VERSION}-slim as builder
+FROM wakemeops/debian:bullseye-slim as builder
 
 ENV PIP_DEFAULT_TIMEOUT=100 \
-    POETRY_HOME=/opt/poetry \
-    POETRY_VIRTUALENVS_IN_PROJECT=true \
-    POETRY_VERSION=1.1.8
-
-ENV PATH="$POETRY_HOME/bin:$PATH"
+    POETRY_VIRTUALENVS_IN_PROJECT=true
 
 WORKDIR /wakemebot
 
-RUN apt-get update -qq && \
-    apt install -qq -yy curl && \
-    rm -rf /var/lib/apt/lists/*
-
-RUN curl -ssL https://raw.githubusercontent.com/sdispater/poetry/master/get-poetry.py | python
+RUN install_packages poetry=1.*
 
 COPY poetry.lock pyproject.toml README.md ./
 RUN poetry install --no-dev --no-interaction --no-ansi --no-root
@@ -23,23 +14,23 @@ RUN poetry install --no-dev --no-interaction --no-ansi --no-root
 COPY src src
 RUN poetry install --no-dev --no-interaction --no-ansi
 
+
 #### CI Executor
-FROM python:${PYTHON_VERSION}-slim as executor
+FROM wakemeops/debian:bullseye-slim as executor
+
+RUN install_packages \
+    python3 \
+    dpkg-dev \
+    jq \
+    curl \
+    git \
+    openssh-client \
+    expect \
+    unzip \
+    debhelper \
+    gnupg
 
 ENV PATH="/wakemebot/.venv/bin:$PATH"
-
-RUN apt-get update -qq && \
-    apt install -qq -yy \
-      dpkg-dev \
-      jq \
-      curl \
-      git \
-      openssh-client \
-      expect \
-      unzip \
-      debhelper \
-      gnupg && \
-    rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /wakemebot /wakemebot
 
