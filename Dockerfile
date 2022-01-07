@@ -32,7 +32,9 @@ RUN install_packages \
     debhelper \
     gnupg \
     fakeroot \
-    build-essential
+    build-essential \
+    binutils-arm-linux-gnueabihf \
+    binutils-aarch64-linux-gnu
 
 ENV PATH="/wakemebot/.venv/bin:$PATH"
 
