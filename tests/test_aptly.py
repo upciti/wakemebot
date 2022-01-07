@@ -98,6 +98,8 @@ def test_delete_packages__should_send_properly_formatted_request(mock_client):
         Package("amd64", "kustomize", "0.13.0-1~ops2deb", "_"),
         Package("amd64", "kustomize", "0.15.0-1~ops2deb", "_"),
         Package("amd64", "kustomize", "0.14.0-1~ops2deb", "_"),
+        Package("armhf", "kustomize", "0.12.0-1~ops2deb", "_"),
+        Package("armhf", "kustomize", "0.12.0-2~ops2deb", "_"),
     ],
 )
 @patch("wakemebot.aptly.httpx.Client", autospec=True)
@@ -108,6 +110,7 @@ def test_purge__should_delete_old_package_versions_and_revisions(_, mock_client)
         "/repos/devops/packages",
         json={
             "PackageRefs": [
+                "Parmhf kustomize 0.12.0-1~ops2deb _",
                 "Pamd64 kustomize 0.12.0-1~ops2deb _",
                 "Pamd64 kubectl 1.0.1-2~ops2deb _",
                 "Pamd64 kubectl 1.0.1-3~ops2deb _",

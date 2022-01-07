@@ -121,8 +121,9 @@ def purge(client: httpx.Client, repo: str, names: Set[str], retain_how_many: int
     all_packages = list_packages(client, repo)
     packages_to_delete: Set[Package] = set()
     for name in names:
-        packages = list(filter(lambda x: x.name == name, all_packages))
-        packages_to_delete.update(purge_old_packages(packages, retain_how_many))
+        for arch in ["amd64", "arm64", "armhf"]:
+            packages = filter(lambda x: x.name == name and x.arch == arch, all_packages)
+            packages_to_delete.update(purge_old_packages(list(packages), retain_how_many))
     delete_packages(client, packages_to_delete, repo)
 
 
