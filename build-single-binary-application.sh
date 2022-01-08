@@ -9,10 +9,9 @@ if ! which poetry objdump; then
 fi
 
 # install project dependencies in .venv
-POETRY_VIRTUALENVS_IN_PROJECT=true poetry install --no-dev
+POETRY_VIRTUALENVS_IN_PROJECT=true poetry install --no-dev --extras pyinstaller
 
 # https://pyinstaller.readthedocs.io/en/stable
-poetry run pip install pyinstaller
 poetry run pyinstaller --onefile src/wakemebot/__main__.py --name wakemebot -s
 
 # test wakemebot help cli
