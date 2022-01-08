@@ -6,7 +6,7 @@ ENV PIP_DEFAULT_TIMEOUT=100 \
 
 WORKDIR /wakemebot
 
-RUN install_packages poetry=1.* ops2deb
+RUN install_packages poetry=1.*
 
 COPY poetry.lock pyproject.toml README.md ./
 RUN poetry install --no-dev --no-interaction --no-ansi --no-root
@@ -31,7 +31,8 @@ RUN install_packages \
     unzip \
     gnupg \
     binutils-arm-linux-gnueabihf \
-    binutils-aarch64-linux-gnu
+    binutils-aarch64-linux-gnu \
+    ops2deb=0.16.*
 
 ENV PATH="/wakemebot/.venv/bin:$PATH"
 
