@@ -93,7 +93,9 @@ jobs:
 
       - name: Build wakemebot single binary application
         run: |
-          ./build-single-binary-application.sh
+          poetry install --no-dev --extras pyinstaller
+          poetry run pyinstaller --onefile src/wakemebot/__main__.py --name wakemebot -s
+          dist/wakemebot --help
           mv dist/wakemebot wakemebot_linux_amd64
 
       - name: Upload build artifact

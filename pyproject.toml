@@ -52,6 +52,11 @@ isort src tests\
  && mypy src\
  && pytest --cov src tests\
 """
+single_binary_application = """
+pyinstaller --onefile src/wakemebot/__main__.py --name wakemebot -s
+"""
+
+
 
 [tool.black]
 line-length = 90

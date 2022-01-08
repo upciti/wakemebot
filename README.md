@@ -25,3 +25,22 @@ cd wakemeops
 wakemebot docs
 ```
 
+## Building single binary application
+
+Install required build dependencies:
+
+```shell
+sudo apt install binutils python3-dev
+poetry install -E pyinstaller
+```
+
+And run:
+
+```shell
+poetry run task single_binary_application
+```
+
+Note that if your venv is using a python distribution built using pyenv, pyinstaller may not work.
+
+If this is the case, build inside a docker container, or follow the instructions here:
+https://pyinstaller.readthedocs.io/en/stable/development/venv.html
