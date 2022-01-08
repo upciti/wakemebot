@@ -3,11 +3,10 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Any, List
 
-from jinja2 import Environment, PackageLoader
+from jinja2 import Environment
 
 from .apt import parse_repository
-
-_environment = Environment(loader=PackageLoader("wakemebot", "templates"))
+from .templates import COMPONENT_PACKAGE_LIST
 
 
 @lru_cache
@@ -32,8 +31,9 @@ def update_section(section_name: str, content: Any) -> None:
 
 
 def update_documentation(repository_url: str, distribution: str) -> None:
+    environment = Environment()
     repository = parse_repository(repository_url, distribution)
     update_section("package_count", repository.package_count)
     for component in repository.components:
-        template = _environment.get_template("component.md")
+        template = environment.from_string(COMPONENT_PACKAGE_LIST)
         update_section(component.name, template.render(component=component))

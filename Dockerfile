@@ -6,7 +6,7 @@ ENV PIP_DEFAULT_TIMEOUT=100 \
 
 WORKDIR /wakemebot
 
-RUN install_packages poetry=1.*
+RUN install_packages poetry=1.* ops2deb
 
 COPY poetry.lock pyproject.toml README.md ./
 RUN poetry install --no-dev --no-interaction --no-ansi --no-root
@@ -29,10 +29,7 @@ RUN install_packages \
     openssh-client \
     expect \
     unzip \
-    debhelper \
     gnupg \
-    fakeroot \
-    build-essential \
     binutils-arm-linux-gnueabihf \
     binutils-aarch64-linux-gnu
 
