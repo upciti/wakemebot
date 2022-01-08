@@ -30,7 +30,13 @@ class Package:
 
 
 def sort_cmp(p1: Package, p2: Package) -> int:
-    return version_compare(p1.version, p2.version)
+    if (version_order := version_compare(p1.version, p2.version)) != 0:
+        return version_order
+    if p1.arch < p2.arch:
+        return -1
+    if p1.arch > p2.arch:
+        return 1
+    return 0
 
 
 def client_factory(server: str) -> httpx.Client:

@@ -110,8 +110,8 @@ def test_purge__should_delete_old_package_versions_and_revisions(_, mock_client)
         "/repos/devops/packages",
         json={
             "PackageRefs": [
-                "Parmhf kustomize 0.12.0-1~ops2deb _",
                 "Pamd64 kustomize 0.12.0-1~ops2deb _",
+                "Parmhf kustomize 0.12.0-1~ops2deb _",
                 "Pamd64 kubectl 1.0.1-2~ops2deb _",
                 "Pamd64 kubectl 1.0.1-3~ops2deb _",
                 "Pamd64 kubectl 1.0.2-1~ops2deb _",

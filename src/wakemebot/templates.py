@@ -1,3 +1,4 @@
+COMPONENT_PACKAGE_LIST = """\
 # {{ component.name|capitalize }} - {{ component.package_count }} packages
 
 {% for package in component.packages %}
@@ -11,3 +12,5 @@ __{{ package.summary }}__
 <span class="badge arch">{{ arch }}</span> {% for version in versions %}<span class="badge version">{{ version }}</span>{{ " " if not loop.last else "" }}{% endfor %}
 {% endfor %}
 {% endfor %}
+
+"""
