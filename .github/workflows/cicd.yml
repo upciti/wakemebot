@@ -86,24 +86,21 @@ jobs:
       - name: Install dependencies
         run: |
           install_packages \
-            pyoxidizer \
             poetry \
-            gcc \
             python3-dev \
             ca-certificates \
-            make
+            binutils
 
       - name: Build wakemebot single binary application
         run: |
           ./build-single-binary-application.sh
-          tar -C build/x86_64-unknown-linux-gnu/release/install \
-              -czvf wakemebot_linux_amd64.tar.gz wakemebot
+          mv dist/wakemebot wakemebot_linux_amd64
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v2
         with:
           name: wakemebot_linux_amd64
-          path: wakemebot_linux_amd64.tar.gz
+          path: wakemebot_linux_amd64
           retention-days: 2
 
   release:
@@ -138,4 +135,4 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           body_path: changelog.md
-          files: wakemebot_linux_amd64.tar.gz
+          files: wakemebot_linux_amd64
