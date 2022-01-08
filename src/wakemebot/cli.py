@@ -75,3 +75,7 @@ def aptly_export(
 
 
 app.add_typer(aptly_app, name="aptly")
+
+
+def main() -> None:
+    app()
