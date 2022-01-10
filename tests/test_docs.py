@@ -15,8 +15,8 @@ repository_snapshot = Repository(
             packages=[
                 RepositoryPackage(
                     name="sometool",
-                    summary="Summary",
-                    description="Description",
+                    summary="beautiful package summary",
+                    description="Awesome package description",
                     homepage="http://sometool.io",
                     versions={"amd64": ["1.0"]},
                 )
@@ -31,9 +31,9 @@ component_section_snapshot = """\
 
 ## [sometool](http://sometool.io)
 
-__Summary__
+__Beautiful package summary__
 
-Description
+Awesome package description
 
 
 <span class="badge arch">amd64</span> <span class="badge version">1.0</span>

@@ -4,7 +4,7 @@ COMPONENT_PACKAGE_LIST = """\
 {% for package in component.packages %}
 ## {% if package.homepage %}[{{ package.name }}]({{ package.homepage }}){% else %}{{ package.name }}{% endif %}
 
-__{{ package.summary }}__
+__{{ package.summary|capitalize }}__
 
 {{ package.description }}
 
