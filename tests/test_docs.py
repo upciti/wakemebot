@@ -15,8 +15,8 @@ repository_snapshot = Repository(
             packages=[
                 RepositoryPackage(
                     name="sometool",
-                    summary="beautiful package summary",
-                    description="Awesome package description",
+                    summary="uppercase first word, DON'T change anything else",
+                    description="Awesome package description.",
                     homepage="http://sometool.io",
                     versions={"amd64": ["1.0"]},
                 )
@@ -31,9 +31,9 @@ component_section_snapshot = """\
 
 ## [sometool](http://sometool.io)
 
-__Beautiful package summary__
+__Uppercase first word, DON'T change anything else__
 
-Awesome package description
+Awesome package description.
 
 
 <span class="badge arch">amd64</span> <span class="badge version">1.0</span>
@@ -67,6 +67,6 @@ def section_factory(tmp_path):
 def test_update_documentation__documentation_section_should_be_equal_to_snapshot(
     tmp_path_working_directory, section_factory, section, section_snapshot
 ):
-    sample_file = section_factory("package_count")
+    sample_file = section_factory(section)
     update_documentation("http://repourl.com", "stable")
-    assert sample_file.read_text() == package_count_section_snapshot
+    assert sample_file.read_text() == section_snapshot
