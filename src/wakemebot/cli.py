@@ -6,6 +6,8 @@ from pydantic import BaseModel, Field, HttpUrl, ValidationError
 
 from wakemebot import aptly, docs
 
+from . import __version__
+
 app = typer.Typer()
 aptly_app = typer.Typer()
 
@@ -13,6 +15,11 @@ aptly_app = typer.Typer()
 class DebianRepository(BaseModel):
     url: HttpUrl
     distribution: str = Field(..., regex=r"[a-zA-Z0-9]+")
+
+
+@app.command(help="Output ops2deb version")
+def version() -> None:
+    typer.secho(__version__)
 
 
 @app.command(name="docs", help="Update documentation")
