@@ -19,6 +19,7 @@ RUN poetry install --no-dev --no-interaction --no-ansi
 FROM wakemeops/debian:bullseye-slim as executor
 
 RUN install_packages \
+    curl \
     ca-certificates \
     python3 \
     git \
