@@ -20,16 +20,8 @@ FROM wakemeops/debian:bullseye-slim as executor
 
 RUN install_packages \
     ca-certificates \
-    github-cli \
     python3 \
-    dpkg-dev \
-    jq \
-    curl \
     git \
-    openssh-client \
-    expect \
-    unzip \
-    gnupg \
     binutils-arm-linux-gnueabihf \
     binutils-aarch64-linux-gnu \
     ops2deb=0.17.*
