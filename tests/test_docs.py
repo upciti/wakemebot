@@ -36,7 +36,7 @@ __Uppercase first word, DON'T change anything else__
 Awesome package description.
 
 
-<span class="badge arch">amd64</span> <span class="badge version">1.0</span>
+<div><span class="badge arch">amd64</span> <span class="badge version">1.0</span></div>
 
 <!-- devops.end -->"""
 

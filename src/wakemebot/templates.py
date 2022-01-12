@@ -9,7 +9,7 @@ __{{ package.summary[0]|upper}}{{package.summary[1:] }}__
 {{ package.description }}
 
 {% for arch, versions in package.versions.items() %}
-<span class="badge arch">{{ arch }}</span> {% for version in versions %}<span class="badge version">{{ version }}</span>{{ " " if not loop.last else "" }}{% endfor %}
+<div><span class="badge arch">{{ arch }}</span> {% for version in versions %}<span class="badge version">{{ version }}</span>{{ " " if not loop.last else "" }}{% endfor %}</div>
 {% endfor %}
 {% endfor %}
 """
