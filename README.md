@@ -4,7 +4,10 @@
 
 # wakemebot
 
-Bunch of tools needed in [wakemeops](https://github.com/upciti/wakemeops) CI pipelines.
+Bunch of tools needed in [wakemeops](https://github.com/upciti/wakemeops) CI pipelines:
+
+* `wakemebot docs`: list debian packages published at <http://deb.wakemeops.com/wakemeops> and update wakemeops documentation.
+* `wakemebot aptly push`: push new packages to aptly.
 
 ## Usage examples
 
@@ -21,6 +24,7 @@ poetry run wakemebot aptly push wakemeops-devops output --server aptly/aptly.soc
 Update wakemeops documentation:
 
 ```shell
+git clone git@github.com:upciti/wakemeops.git
 cd wakemeops
 wakemebot docs
 ```
