@@ -25,7 +25,7 @@ def version() -> None:
 @app.command(name="docs", help="Update documentation")
 def update_documentation(
     debian_repository: str = typer.Option(
-        "http://deb.wakemeops.com/ stable",
+        "http://deb.wakemeops.com/wakemeops/ stable",
         "--repository",
         "-r",
         envvar="OPS2DEB_REPOSITORY",
