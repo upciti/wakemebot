@@ -25,7 +25,7 @@ RUN install_packages \
     git \
     binutils-arm-linux-gnueabihf \
     binutils-aarch64-linux-gnu \
-    ops2deb=0.19.*
+    ops2deb=0.20.*
 
 ENV PATH="/wakemebot/.venv/bin:$PATH"
 
