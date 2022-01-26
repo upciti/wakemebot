@@ -13,6 +13,7 @@ class RepositoryPackage:
     summary: str
     description: str
     homepage: str
+    latest_version: str
     versions: Dict[str, List[str]] = field(default_factory=dict)  # versions per arch
 
 
@@ -53,15 +54,16 @@ def _parse_repository_packages_file(
     """Extract package names and versions from a repo Packages file"""
     for src in Packages.iter_paragraphs(content, use_apt_pkg=False):
         package_name = src["Package"]
+        architecture = src["Architecture"]
+        version = Version(src["Version"]).upstream_version
         if package_name not in packages.keys():
             packages[package_name] = RepositoryPackage(
                 description="\n".join(src["Description"].split("\n")[1:]),
                 homepage=src.get("Homepage", None),
                 name=package_name,
                 summary=src["Description"].split("\n")[0],
+                latest_version=version or "unknown",
             )
-        architecture = src["Architecture"]
-        version = Version(src["Version"]).upstream_version
         if architecture not in packages[package_name].versions:
             packages[package_name].versions[architecture] = []
         package_versions = packages[package_name].versions[architecture]

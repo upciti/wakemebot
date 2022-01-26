@@ -13,3 +13,12 @@ __{{ package.summary[0]|upper}}{{package.summary[1:] }}__
 {% endfor %}
 {% endfor %}
 """
+
+PACKAGE_PERMALINK = """\
+<!DOCTYPE html>
+<html>
+   <head>
+      <meta http-equiv="refresh" content="0; url=/components/{{component}}/#{{package}}" />
+   </head>
+</html>
+"""

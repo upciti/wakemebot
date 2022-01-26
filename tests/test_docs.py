@@ -18,6 +18,7 @@ repository_snapshot = Repository(
                     summary="uppercase first word, DON'T change anything else",
                     description="Awesome package description:\n.\n- Item 1\n- Item 2",
                     homepage="http://sometool.io",
+                    latest_version="1.0",
                     versions={"amd64": ["1.0"]},
                 )
             ],

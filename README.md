@@ -29,6 +29,12 @@ cd wakemeops
 wakemebot docs
 ```
 
+Wakemebot generates badges for package hosted by wakemeops:
+
+```markdown
+[![WakeMeOps](https://docs.wakemeops.com/badges/wakemebot.svg)](https://docs.wakemeops.com/packages/wakemebot)
+```
+
 ## Building single binary application
 
 Install required build dependencies:
