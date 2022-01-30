@@ -49,7 +49,7 @@ def update_package_badges(component: RepositoryComponent) -> None:
     badges_path.mkdir(exist_ok=True, parents=True)
     for package in component.packages:
         badge = anybadge.Badge(
-            label="wakemeops", value=f"v{package.latest_version}", default_color="purple"
+            label="WakeMeOps", value=f"v{package.latest_version}", default_color="purple"
         )
         badge.write_badge(str(badges_path / f"{package.name}.svg"), overwrite=True)
     print(f"Updated badges for {component.name} component")
