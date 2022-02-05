@@ -1,4 +1,3 @@
-import json
 import sys
 import uuid
 from contextlib import contextmanager
@@ -165,7 +164,6 @@ def push(repo: str, package_directory: Path, retain: int, server: str) -> None:
     if not packages:
         return
 
-    # List repos matching pattern
     repos = [r["Name"] for r in client.get("/repos").json()]
 
     if repo not in repos:
@@ -176,22 +174,3 @@ def push(repo: str, package_directory: Path, retain: int, server: str) -> None:
     names = {file.name.split("_")[0] for file in packages}
     for repo in repos:
         purge(client, repo, names, retain)
-
-
-def export(repo: str, server: str, short: bool) -> None:
-    client = client_factory(server)
-    response = client.get(f"/repos/{repo}/packages{'' if short else '?format=details'}")
-    response.raise_for_status()
-    response_json = response.json()
-
-    if short is False:
-        # FIXME: drop some keys?
-        print(json.dumps(response_json))
-        return
-
-    # Keep only binary packages
-    response_json = [p[1:] for p in response_json if p.startswith("P")]
-
-    # Keep arch, package name and version as a list for each package
-    response_json = [p.split(" ")[:-1] for p in response_json]
-    print(json.dumps(response_json))

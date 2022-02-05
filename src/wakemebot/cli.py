@@ -50,15 +50,11 @@ def update_documentation(
     docs.update_documentation(url, distribution)
 
 
-@aptly_app.command(
-    name="push", help="Generate debian sources packages using last git commit"
-)
+@aptly_app.command(name="push", help="Push debian sources packages to aptly repository")
 def aptly_push(
-    repo_pattern: str = typer.Argument(
-        ..., help="Pattern matched against the list of aptly repositories"
-    ),
+    repository: str = typer.Argument(..., help="Aptly repository name"),
     package_directory: Path = typer.Argument(
-        ..., help="A directory containing debian packages to upload"
+        ..., help="Directory containing debian packages to upload"
     ),
     retain: int = typer.Option(
         100, help="For each package, how many versions will be kept"
@@ -67,18 +63,7 @@ def aptly_push(
         "/var/lib/aptly/aptly.sock", help="Path to server unix socket"
     ),
 ) -> None:
-    aptly.push(repo_pattern, package_directory, retain, server)
-
-
-@aptly_app.command(name="export", help="Save repo package list as JSON")
-def aptly_export(
-    repo: str = typer.Argument(..., help="Aptly repository name"),
-    server: str = typer.Option(
-        "/var/lib/aptly/aptly.sock", help="Path to server unix socket"
-    ),
-    short: bool = typer.Option(True),
-) -> None:
-    aptly.export(repo, server, short)
+    aptly.push(repository, package_directory, retain, server)
 
 
 app.add_typer(aptly_app, name="aptly")
