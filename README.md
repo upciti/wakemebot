@@ -1,6 +1,9 @@
+![cicd](https://github.com/upciti/ops2deb/actions/workflows/cicd.yml/badge.svg)
+[![codecov](https://codecov.io/gh/upciti/wakemebot/branch/main/graph/badge.svg)](https://codecov.io/gh/upciti/wakemebot)
 [![MIT license](https://img.shields.io/badge/License-MIT-blue.svg)](https://lbesson.mit-license.org/)
-[![Generic badge](https://img.shields.io/badge/type_checked-mypy-informational.svg)](https://mypy.readthedocs.io/en/stable/introduction.html)
+[![Mypy](https://img.shields.io/badge/type_checked-mypy-informational.svg)](https://mypy.readthedocs.io/en/stable/introduction.html)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/ambv/black)
+[![WakeMeOps](https://docs.wakemeops.com/badges/wakemebot.svg)](https://docs.wakemeops.com/packages/wakemebot)
 
 # wakemebot
 
