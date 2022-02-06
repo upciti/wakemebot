@@ -103,7 +103,6 @@ def purge_old_packages(packages: List[Package], retain_how_many: int) -> Set[Pac
     packages_to_delete: Set[Package] = set()
     purge_functions: List[Callable[[List[Package]], List[Package]]] = [
         purge_old_revisions,
-        purge_old_patches,
         partial(purge_old_versions, retain_how_many=retain_how_many),
     ]
     for purge_function in purge_functions:
