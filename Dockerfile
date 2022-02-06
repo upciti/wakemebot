@@ -23,7 +23,8 @@ RUN install_packages \
     curl \
     ca-certificates \
     python3 \
-    make
+    make \
+    git
 
 ENV PATH="/wakemebot/.venv/bin:$PATH"
 
