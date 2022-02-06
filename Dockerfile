@@ -23,10 +23,7 @@ RUN install_packages \
     curl \
     ca-certificates \
     python3 \
-    git \
-    binutils-arm-linux-gnueabihf \
-    binutils-aarch64-linux-gnu \
-    ops2deb=0.20.*
+    make
 
 ENV PATH="/wakemebot/.venv/bin:$PATH"
 
