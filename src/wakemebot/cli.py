@@ -17,7 +17,7 @@ class DebianRepository(BaseModel):
     distribution: str = Field(..., regex=r"[a-zA-Z0-9]+")
 
 
-@app.command(help="Output ops2deb version")
+@app.command(help="Output wakemebot version")
 def version() -> None:
     typer.secho(__version__)
 
