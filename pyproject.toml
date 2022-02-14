@@ -28,7 +28,6 @@ mkdocs = "^1.2.3"
 mkdocs-material = "^8.0.1"
 semver = "3.0.0-dev.2"
 pyinstaller = { version = "*", optional = true }
-anybadge = "^1.8.0"
 
 [tool.poetry.scripts]
 wakemebot = "wakemebot.cli:main"

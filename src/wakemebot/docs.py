@@ -3,10 +3,10 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Any, List
 
-import anybadge
 from jinja2 import Environment
 
 from .apt import RepositoryComponent, parse_repository
+from .badges import Badge
 from .templates import COMPONENT_PACKAGE_LIST, PACKAGE_PERMALINK
 
 environment = Environment()
@@ -48,10 +48,7 @@ def update_package_badges(component: RepositoryComponent) -> None:
     badges_path = Path("docs/badges")
     badges_path.mkdir(exist_ok=True, parents=True)
     for package in component.packages:
-        badge = anybadge.Badge(
-            label="WakeMeOps", value=f"v{package.latest_version}", default_color="purple"
-        )
-        badge.write_badge(str(badges_path / f"{package.name}.svg"), overwrite=True)
+        Badge(package.latest_version).save(badges_path / f"{package.name}.svg")
     print(f"Updated badges for {component.name} component")
 
 
