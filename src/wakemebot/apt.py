@@ -1,5 +1,6 @@
 from dataclasses import dataclass, field
 from functools import lru_cache
+from textwrap import dedent
 from typing import Dict, List
 
 import httpx
@@ -58,7 +59,7 @@ def _parse_repository_packages_file(
         version = Version(src["Version"]).upstream_version
         if package_name not in packages.keys():
             packages[package_name] = RepositoryPackage(
-                description="\n".join(src["Description"].split("\n")[1:]),
+                description=dedent("\n".join(src["Description"].split("\n")[1:])),
                 homepage=src.get("Homepage", None),
                 name=package_name,
                 summary=src["Description"].split("\n")[0],
