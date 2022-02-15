@@ -15,7 +15,11 @@ classifiers = [
 readme = "README.md"
 packages = [
     {include = "wakemebot", from  = "src"},
+    {include = "wakemebot", from  = "src"},
 ]
+
+[tool.poetry.plugins."mkdocs.plugins"]
+wakemedoc = "wakemebot.plugin:WakeMeDocPlugin"
 
 [tool.poetry.dependencies]
 python = ">=3.9,<3.11"
@@ -56,8 +60,6 @@ isort src tests\
 single_binary_application = """
 pyinstaller --onefile src/wakemebot/__main__.py --name wakemebot -s
 """
-
-
 
 [tool.black]
 line-length = 90

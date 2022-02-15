@@ -1,7 +1,10 @@
+from collections import defaultdict
+from contextlib import contextmanager
 from dataclasses import dataclass, field
-from functools import lru_cache
+from itertools import product
+from pathlib import Path
 from textwrap import dedent
-from typing import Dict, List
+from typing import Callable, Dict, Generator, List, Set
 
 import httpx
 from debian.deb822 import Packages, Release
@@ -15,7 +18,8 @@ class RepositoryPackage:
     description: str
     homepage: str
     latest_version: str
-    versions: Dict[str, List[str]] = field(default_factory=dict)  # versions per arch
+    component: str
+    versions: Dict[str, Set[str]] = field(default_factory=lambda: defaultdict(set))
 
 
 @dataclass
@@ -27,30 +31,33 @@ class RepositoryComponent:
 
 @dataclass
 class Repository:
-    package_count: int
+    architectures: List[str]
     components: List[RepositoryComponent]
+    packages: Dict[str, RepositoryPackage]
+    package_count: int
 
 
-def _download_repository_release_file(client: httpx.Client, distribution: str) -> Release:
-    url = f"/dists/{distribution}/Release"
-    response = client.get(url)
-    response.raise_for_status()
-    return Release(response.text)
+@contextmanager
+def read_page_content(base_url: str) -> Generator[Callable[[str], str], None, None]:
+    with httpx.Client(base_url=base_url, follow_redirects=True) as client:
 
+        def _get(url: str) -> str:
+            content_path = Path("/tmp/wakemebot") / url[1:]
+            if content_path.exists():
+                return content_path.read_text()
+            else:
+                print(f"Downloading {url}...")
+                response = client.get(url)
+                response.raise_for_status()
+                content_path.parent.mkdir(exist_ok=True, parents=True)
+                content_path.write_text(response.text)
+                return response.text
 
-@lru_cache
-def _download_repository_packages_file(
-    client: httpx.Client, distribution: str, component: str, arch: str
-) -> bytes:
-    url = f"/dists/{distribution}/{component}/binary-{arch}/Packages"
-    print(f"Downloading {url}...")
-    with client.stream("GET", url) as response:
-        response.raise_for_status()
-        return response.read()
+        yield _get
 
 
 def _parse_repository_packages_file(
-    content: bytes, packages: Dict[str, RepositoryPackage]
+    component: str, content: str, packages: Dict[str, RepositoryPackage]
 ) -> None:
     """Extract package names and versions from a repo Packages file"""
     for src in Packages.iter_paragraphs(content, use_apt_pkg=False):
@@ -64,37 +71,36 @@ def _parse_repository_packages_file(
                 name=package_name,
                 summary=src["Description"].split("\n")[0],
                 latest_version=version or "unknown",
+                component=component,
             )
-        if architecture not in packages[package_name].versions:
-            packages[package_name].versions[architecture] = []
-        package_versions = packages[package_name].versions[architecture]
-        if version is not None and version not in package_versions:
-            package_versions.append(version)
-
-
-def _build_repository_component(
-    client: httpx.Client, component: str, architectures: List[str]
-) -> RepositoryComponent:
-    packages: Dict[str, RepositoryPackage] = {}
-    for architecture in architectures:
-        content = _download_repository_packages_file(
-            client, "stable", component, architecture
-        )
-        _parse_repository_packages_file(content, packages)
-    return RepositoryComponent(
-        name=component, packages=list(packages.values()), package_count=len(packages)
-    )
+        versions = packages[package_name].versions
+        if version is not None:
+            versions[version].add(architecture)
 
 
 def parse_repository(repository_url: str, distribution: str) -> Repository:
-    with httpx.Client(base_url=repository_url, follow_redirects=True) as client:
-        release = _download_repository_release_file(client, distribution)
+    with read_page_content(repository_url) as reader:
+        packages: Dict[str, RepositoryPackage] = {}
+        release = Release(reader(f"/dists/{distribution}/Release"))
         architectures = release["Architectures"].split(" ")
-        components = release["Components"].split(" ")
-        repository_components = [
-            _build_repository_component(client, c, architectures) for c in components
-        ]
+        component_names = release["Components"].split(" ")
+        for component, arch in product(component_names, architectures):
+            content = reader(f"/dists/stable/{component}/binary-{arch}/Packages")
+            _parse_repository_packages_file(component, content, packages)
+
+    components = []
+    for component in component_names:
+        component_packages = [p for p in packages.values() if p.component == component]
+        repository_component = RepositoryComponent(
+            name=component,
+            package_count=len(component_packages),
+            packages=component_packages,
+        )
+        components.append(repository_component)
+
     return Repository(
-        components=repository_components,
-        package_count=sum([c.package_count for c in repository_components]),
+        architectures=architectures,
+        components=components,
+        packages={k: v for k, v in sorted(packages.items())},
+        package_count=len(packages),
     )

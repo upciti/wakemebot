@@ -215,6 +215,7 @@ class Badge:
         )
 
     def save(self, output_path: Path) -> None:
+        output_path.parent.mkdir(exist_ok=True, parents=True)
         output_path.write_text(self.generate())
 
 
