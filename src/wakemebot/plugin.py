@@ -1,4 +1,5 @@
 from pathlib import Path
+from random import sample
 from typing import Any, Dict, List, Optional
 
 from jinja2 import Environment
@@ -13,7 +14,10 @@ from mkdocs.structure.toc import AnchorLink, TableOfContents
 from .apt import parse_repository
 from .badges import Badge
 
+filters = {"sample": sample}
+
 environment = Environment()
+environment.filters.update(filters)
 
 
 class WakeMeDocPlugin(BasePlugin):
@@ -101,6 +105,7 @@ class WakeMeDocPlugin(BasePlugin):
 
     def on_env(self, env: Environment, config: Config, files: Files) -> Environment:
         env.globals.update({"repository": self.repository, "packages": self.packages})
+        env.filters.update(filters)
         return env
 
     def on_page_context(
