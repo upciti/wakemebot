@@ -24,12 +24,21 @@ cd ..
 poetry run wakemebot aptly push wakemeops-devops output --server aptly/aptly.sock
 ```
 
-Update wakemeops documentation:
+## Building WakeMeOps documentation
+
+Create a venv with poetry and start a shell:
+
+```shell
+poetry install
+poetry shell
+```
+
+Then build WakeMeOps mkdocs documentation:
 
 ```shell
 git clone git@github.com:upciti/wakemeops.git
 cd wakemeops
-wakemebot docs
+mkdocs build
 ```
 
 Wakemebot generates badges for package hosted by wakemeops:
