@@ -32,7 +32,7 @@ class RepositoryComponent:
 @dataclass
 class Repository:
     architectures: List[str]
-    components: List[RepositoryComponent]
+    components: Dict[str, RepositoryComponent]
     packages: Dict[str, RepositoryPackage]
     package_count: int
 
@@ -88,7 +88,7 @@ def parse_repository(repository_url: str, distribution: str) -> Repository:
             content = reader(f"/dists/stable/{component}/binary-{arch}/Packages")
             _parse_repository_packages_file(component, content, packages)
 
-    components = []
+    components: Dict[str, RepositoryComponent] = {}
     for component in component_names:
         component_packages = [p for p in packages.values() if p.component == component]
         repository_component = RepositoryComponent(
@@ -96,7 +96,7 @@ def parse_repository(repository_url: str, distribution: str) -> Repository:
             package_count=len(component_packages),
             packages=component_packages,
         )
-        components.append(repository_component)
+        components[component] = repository_component
 
     return Repository(
         architectures=architectures,
