@@ -33,6 +33,7 @@ mkdocs-material = "^8"
 semver = "3.0.0-dev.3"
 pyinstaller = { version = "*", optional = true }
 ops2deb = "*"
+pygit2 = "^1.9.0"
 
 [tool.poetry.scripts]
 wakemebot = "wakemebot.cli:main"
@@ -46,6 +47,7 @@ flake8 = "*"
 black = ">=20.8b1"
 isort = "*"
 poetry-dynamic-versioning = "*"
+starlette = "*"
 
 [tool.poetry.extras]
 pyinstaller = ["pyinstaller"]
