@@ -40,7 +40,7 @@ def sort_cmp(p1: Package, p2: Package) -> int:
 
 def client_factory(server: str) -> httpx.Client:
     transport = httpx.HTTPTransport(uds=server, retries=2)
-    return httpx.Client(transport=transport, base_url="http://aptly/api")
+    return httpx.Client(transport=transport, base_url="http://aptly/api", timeout=30)
 
 
 def parse_packages(data: List[str]) -> List[Package]:
