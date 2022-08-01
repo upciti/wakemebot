@@ -1,9 +1,11 @@
 from pathlib import Path
+from typing import Optional
 
+import pygit2
 import typer
 from pydantic import BaseModel, Field, HttpUrl
 
-from wakemebot import aptly
+from wakemebot import aptly, bot
 
 from . import __version__
 
@@ -14,6 +16,36 @@ aptly_app = typer.Typer()
 class DebianRepository(BaseModel):
     url: HttpUrl
     distribution: str = Field(..., regex=r"[a-zA-Z0-9]+")
+
+
+def check_access_token(value: Optional[str]) -> str:
+    if value is None:
+        raise typer.BadParameter("Missing Github Access Token")
+    return value
+
+
+def get_git_repo_path(path: Path) -> Path:
+    repo_path = pygit2.discover_repository(path)
+    if not repo_path:
+        raise typer.BadParameter(f"No repository found at '{path}'")
+    return Path(repo_path).parent
+
+
+@app.command(help="Look for updates and create pull requests")
+def create_pull_requests(
+    repository_path: Path = typer.Option(
+        Path("."),
+        help="Path to WakeMeOps repository",
+        callback=get_git_repo_path,
+    ),
+    access_token: str = typer.Option(
+        None,
+        help="Github Personal Access Token",
+        envvar="WAKEMEBOT_GITHUB_ACCESS_TOKEN",
+        callback=check_access_token,
+    ),
+) -> None:
+    bot.create_pull_requests(repository_path, access_token)
 
 
 @app.command(help="Output wakemebot version")
