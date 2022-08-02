@@ -1,3 +1,4 @@
+import base64
 import sys
 import uuid
 from contextlib import contextmanager
@@ -6,7 +7,8 @@ from functools import cmp_to_key, partial
 from itertools import groupby
 from operator import attrgetter
 from pathlib import Path
-from typing import Callable, Iterator, List, Set
+from tempfile import TemporaryDirectory
+from typing import Callable, Generator, Iterator, List, Set
 
 import httpx
 from debian.debian_support import Version, version_compare
@@ -38,9 +40,23 @@ def sort_cmp(p1: Package, p2: Package) -> int:
     return 0
 
 
-def client_factory(server: str) -> httpx.Client:
-    transport = httpx.HTTPTransport(uds=server, retries=2)
-    return httpx.Client(transport=transport, base_url="http://aptly/api", timeout=30)
+@contextmanager
+def client_factory(
+    server_url: str, ca_cert: str, client_cert: str, client_key: str
+) -> Generator[httpx.Client, None, None]:
+    with TemporaryDirectory(prefix="wakemebot_") as base_directory:
+        ca_cert_path = Path(base_directory) / "ca.crt"
+        ca_cert_path.write_bytes(base64.b64decode(ca_cert))
+        client_cert_path = Path(base_directory) / "client.crt"
+        client_cert_path.write_bytes(base64.b64decode(client_cert))
+        client_key_path = Path(base_directory) / "client.key"
+        client_key_path.write_bytes(base64.b64decode(client_key))
+        transport = httpx.HTTPTransport(
+            retries=2,
+            cert=(str(client_cert_path), str(client_key_path)),
+            verify=str(ca_cert_path),
+        )
+        yield httpx.Client(transport=transport, base_url=server_url, timeout=30)
 
 
 def parse_packages(data: List[str]) -> List[Package]:
@@ -150,9 +166,15 @@ def upload_packages(client: httpx.Client, packages: List[Path], repo: str) -> No
         response.raise_for_status()
 
 
-def push(repo: str, package_directory: Path, retain: int, server: str) -> None:
-    client = client_factory(server)
-
+def push(
+    repo: str,
+    package_directory: Path,
+    retain: int,
+    server_url: str,
+    ca_cert: str,
+    client_cert: str,
+    client_key: str,
+) -> None:
     if package_directory.is_dir() is False:
         print(f"{package_directory} is not a directory")
         sys.exit(1)
@@ -163,13 +185,33 @@ def push(repo: str, package_directory: Path, retain: int, server: str) -> None:
     if not packages:
         return
 
-    repos = [r["Name"] for r in client.get("/repos").json()]
+    with client_factory(server_url, ca_cert, client_cert, client_key) as client:
+        response = client.get("/repos")
+        response.raise_for_status()
+        repos = [r["Name"] for r in response.json()]
+        if repo not in repos:
+            print(f"Aptly repository {repo} not found.")
+            return
+        upload_packages(client, packages, repo)
+        names = {file.name.split("_")[0] for file in packages}
+        for repo in repos:
+            purge(client, repo, names, retain)
 
-    if repo not in repos:
-        print(f"Aptly repository {repo} not found.")
-        return
 
-    upload_packages(client, packages, repo)
-    names = {file.name.split("_")[0] for file in packages}
-    for repo in repos:
-        purge(client, repo, names, retain)
+def publish(
+    repo: str,
+    server_url: str,
+    ca_cert: str,
+    client_cert: str,
+    client_key: str,
+) -> None:
+    with client_factory(server_url, ca_cert, client_cert, client_key) as client:
+        response = client.put(
+            f"/publish/{repo}",
+            json={
+                "ForceOverwrite": True,
+                "Signing": {"GpgKey": "wakemebot@protonmail.com", "Batch": True},
+            },
+        )
+        response.raise_for_status()
+        print(response.json())
