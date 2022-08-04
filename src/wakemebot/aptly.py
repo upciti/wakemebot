@@ -56,7 +56,7 @@ def client_factory(
             cert=(str(client_cert_path), str(client_key_path)),
             verify=str(ca_cert_path),
         )
-        yield httpx.Client(transport=transport, base_url=server_url, timeout=30)
+        yield httpx.Client(transport=transport, base_url=server_url, timeout=60)
 
 
 def parse_packages(data: List[str]) -> List[Package]:
