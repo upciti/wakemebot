@@ -33,4 +33,4 @@ COPY --from=builder /wakemebot /wakemebot
 RUN groupadd --gid 1003 wakemebot && \
     useradd --uid 1003 --gid wakemebot --create-home wakemebot
 
-USER 1003
+USER 1001
