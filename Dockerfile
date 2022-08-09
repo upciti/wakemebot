@@ -7,5 +7,3 @@ ARG WAKEMEBOT_PATH="dist/wakemebot"
 COPY ${WAKEMEBOT_PATH} /usr/local/bin/wakemebot
 
 USER 1001
-
-
