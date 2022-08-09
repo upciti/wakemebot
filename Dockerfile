@@ -1,9 +1,31 @@
-FROM bitnami/minideb:bullseye AS slim
+#### Builder
+FROM wakemeops/debian:bullseye-slim as builder
 
-ENV LC_ALL=C.UTF-8 \
-    LANG=C.UTF-8
+ENV PIP_DEFAULT_TIMEOUT=100 \
+    POETRY_VIRTUALENVS_IN_PROJECT=true
 
-ARG WAKEMEBOT_PATH="dist/wakemebot"
-COPY ${WAKEMEBOT_PATH} /usr/local/bin/wakemebot
+WORKDIR /wakemebot
+
+RUN install_packages poetry=1.*
+
+COPY poetry.lock pyproject.toml README.md ./
+RUN poetry install --no-dev --no-interaction --no-ansi --no-root
+
+COPY src src
+RUN poetry install --no-dev --no-interaction --no-ansi
+
+
+#### CI Executor
+FROM wakemeops/debian:bullseye-slim as executor
+
+RUN install_packages \
+    curl \
+    ca-certificates \
+    python3 \
+    make
+
+ENV PATH="/wakemebot/.venv/bin:$PATH"
+
+COPY --from=builder /wakemebot /wakemebot
 
 USER 1001
