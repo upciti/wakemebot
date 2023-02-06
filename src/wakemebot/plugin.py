@@ -11,8 +11,8 @@ from mkdocs.structure.nav import Navigation
 from mkdocs.structure.pages import Page
 from mkdocs.structure.toc import AnchorLink, TableOfContents
 
-from .apt import parse_repository
-from .badges import Badge
+from wakemebot.apt import parse_repository
+from wakemebot.badges import Badge
 
 filters = {"sample": sample}
 
@@ -20,7 +20,7 @@ environment = Environment()
 environment.filters.update(filters)
 
 
-class WakeMeDocPlugin(BasePlugin):
+class WakeMeDocPlugin(BasePlugin):  # type: ignore[type-arg]
     config_scheme = (
         ("repository_url", Type(str, default="http://deb.wakemeops.com/wakemeops/")),
         ("distribution", Type(str, default="stable")),
@@ -120,11 +120,10 @@ class WakeMeDocPlugin(BasePlugin):
                 features.remove("toc.integrate")
 
         # Use toc to list package versions on package pages
-        if (package := self.packages.get(page.title, None)) is not None:
+        if page.title and (package := self.packages.get(page.title, None)) is not None:
             items = [AnchorLink(v, v, 0) for v in package.versions.keys()]
             page.toc = TableOfContents(items)
             config["mdx_configs"]["toc"] = {"title": "Versions"}
-            page.toc.title = "Versions"
         else:
             config["mdx_configs"].pop("toc", None)
 
