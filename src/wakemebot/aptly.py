@@ -52,11 +52,11 @@ def client_factory(
         client_key_path = Path(base_directory) / "client.key"
         client_key_path.write_bytes(base64.b64decode(client_key))
         transport = httpx.HTTPTransport(
-            retries=2,
+            retries=3,
             cert=(str(client_cert_path), str(client_key_path)),
             verify=str(ca_cert_path),
         )
-        yield httpx.Client(transport=transport, base_url=server_url, timeout=60)
+        yield httpx.Client(transport=transport, base_url=server_url, timeout=120)
 
 
 def parse_packages(data: List[str]) -> List[Package]:
