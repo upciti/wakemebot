@@ -24,6 +24,7 @@ class WakeMeDocPlugin(BasePlugin):  # type: ignore[type-arg]
     config_scheme = (
         ("repository_url", Type(str, default="http://deb.wakemeops.com/wakemeops/")),
         ("distribution", Type(str, default="stable")),
+        ("badges", Type(bool, default=True)),
     )
 
     def __init__(self) -> None:
@@ -100,7 +101,8 @@ class WakeMeDocPlugin(BasePlugin):  # type: ignore[type-arg]
 
     def on_files(self, files: Files, config: Config) -> Files:
         self.generate_package_markdown(files, config["site_dir"])
-        self.generate_package_badges(files, config["site_dir"])
+        if self.config["badges"] is True:
+            self.generate_package_badges(files, config["site_dir"])
         return files
 
     def on_env(self, env: Environment, config: Config, files: Files) -> Environment:
