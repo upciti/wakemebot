@@ -85,7 +85,7 @@ def parse_repository(repository_url: str, distribution: str) -> Repository:
         architectures = release["Architectures"].split(" ")
         component_names = release["Components"].split(" ")
         for component, arch in product(component_names, architectures):
-            content = reader(f"/dists/stable/{component}/binary-{arch}/Packages")
+            content = reader(f"/dists/{distribution}/{component}/binary-{arch}/Packages")
             _parse_repository_packages_file(component, content, packages)
 
     components: Dict[str, RepositoryComponent] = {}
