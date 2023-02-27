@@ -12,6 +12,14 @@ from debian.debian_support import Version
 
 
 @dataclass
+class PackageFile:
+    version: str
+    url: str
+    sha256: str
+    size: int
+
+
+@dataclass
 class RepositoryPackage:
     name: str
     summary: str
@@ -20,6 +28,7 @@ class RepositoryPackage:
     latest_version: str
     component: str
     versions: Dict[str, Set[str]] = field(default_factory=lambda: defaultdict(set))
+    files: Dict[str, List[PackageFile]] = field(default_factory=lambda: defaultdict(list))
 
 
 @dataclass
@@ -31,6 +40,8 @@ class RepositoryComponent:
 
 @dataclass
 class Repository:
+    url: str
+    distribution: str
     architectures: List[str]
     components: Dict[str, RepositoryComponent]
     packages: Dict[str, RepositoryPackage]
@@ -57,7 +68,10 @@ def read_page_content(base_url: str) -> Generator[Callable[[str], str], None, No
 
 
 def _parse_repository_packages_file(
-    component: str, content: str, packages: Dict[str, RepositoryPackage]
+    repository_url: str,
+    component: str,
+    content: str,
+    packages: Dict[str, RepositoryPackage],
 ) -> None:
     """Extract package names and versions from a repo Packages file"""
     for src in Packages.iter_paragraphs(content, use_apt_pkg=False):
@@ -73,9 +87,19 @@ def _parse_repository_packages_file(
                 latest_version=version or "unknown",
                 component=component,
             )
+        if version is None:
+            continue
         versions = packages[package_name].versions
-        if version is not None:
-            versions[version].add(architecture)
+        versions[version].add(architecture)
+        files = packages[package_name].files
+        files[architecture].append(
+            PackageFile(
+                version=version,
+                url=repository_url + src["Filename"],
+                sha256=src["SHA256"],
+                size=int(src["Size"]),
+            )
+        )
 
 
 def parse_repository(repository_url: str, distribution: str) -> Repository:
@@ -86,7 +110,7 @@ def parse_repository(repository_url: str, distribution: str) -> Repository:
         component_names = release["Components"].split(" ")
         for component, arch in product(component_names, architectures):
             content = reader(f"/dists/{distribution}/{component}/binary-{arch}/Packages")
-            _parse_repository_packages_file(component, content, packages)
+            _parse_repository_packages_file(repository_url, component, content, packages)
 
     components: Dict[str, RepositoryComponent] = {}
     for component in component_names:
@@ -99,6 +123,8 @@ def parse_repository(repository_url: str, distribution: str) -> Repository:
         components[component] = repository_component
 
     return Repository(
+        url=repository_url,
+        distribution=distribution,
         architectures=architectures,
         components=components,
         packages={k: v for k, v in sorted(packages.items())},
