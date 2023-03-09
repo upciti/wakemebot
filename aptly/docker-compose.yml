@@ -5,13 +5,14 @@ services:
     build:
       context: .
     restart: always
-    command:
-      [
-        "aptly",
-        "api",
-        "serve",
-        "-listen=unix:///var/lib/aptly/aptly.sock",
-        "-no-lock",
-      ]
     volumes:
       - .:/var/lib/aptly
+
+  nginx:
+    image: nginx
+    restart: always
+    ports:
+      - 40000:443
+    volumes:
+      - ./nginx:/etc/nginx/conf.d/
+    command: ["nginx", "-g", "daemon off;"]
