@@ -41,19 +41,17 @@ pytest = "*"
 mypy = "*"
 taskipy = "*"
 pytest-cov = "*"
-flake8 = "*"
 black = ">=20.8b1"
-isort = "*"
 poetry-dynamic-versioning = "^0.13.1"
+ruff = "^0.0.254"
 
 [tool.poetry.extras]
 pyinstaller = ["pyinstaller"]
 
 [tool.taskipy.tasks]
 check = """
-isort src tests\
- && black src tests\
- && flake8 src tests\
+black src tests\
+ && ruff src tests --fix\
  && mypy src\
  && pytest --cov src tests\
 """
@@ -77,6 +75,22 @@ exclude = '''
 [tool.isort]
 line_length = 90
 profile = "black"
+
+[tool.mypy]
+files = "src"
+strict = true
+plugins = ["pydantic.mypy"]
+disallow_untyped_calls = false
+
+[tool.ruff]
+line-length = 90
+select = [
+    "E",
+    "F",
+    "W",
+    "I001",
+]
+src = ["src", "tests"]
 
 [build-system]
 requires = ["poetry>=1.0.2", "poetry-dynamic-versioning"]
