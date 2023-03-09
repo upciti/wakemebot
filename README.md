@@ -9,8 +9,13 @@
 
 Bunch of tools needed in [wakemeops](https://github.com/upciti/wakemeops) CI pipelines:
 
-- `wakemebot docs`: list debian packages published at <http://deb.wakemeops.com/wakemeops> and update wakemeops documentation.
-- `wakemebot aptly push`: push new packages to aptly.
+Commands used to update wakemeops Debian repository:
+
+- `wakemebot aptly push`: push new packages to aptly repo.
+- `wakemebot aptly remove`: remove packages from aptly repo.
+- `wakemebot aptly publish`: update published prefix.
+
+Documentation at https://docs.wakemeops.com is updated by running `mkdocs build`
 
 ## Usage examples
 

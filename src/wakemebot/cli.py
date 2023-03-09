@@ -1,12 +1,15 @@
+import base64
+import re
+from contextlib import contextmanager
 from pathlib import Path
-from typing import Optional
+from tempfile import TemporaryDirectory
+from typing import Iterator, Optional
 
 import typer
 from pydantic import BaseModel, Field, HttpUrl
 
-from wakemebot import aptly
-
-from . import __version__
+from wakemebot import __version__
+from wakemebot.aptly import AptlyClient, MTLSCredentials
 
 app = typer.Typer()
 aptly_app = typer.Typer()
@@ -26,6 +29,12 @@ def client_configuration_callback(value: Optional[str]) -> str:
     if value is None:
         raise typer.BadParameter("Option must be set through env or cli")
     return value
+
+
+def package_directory_callback(path: Path) -> Path:
+    if path.is_dir() is False:
+        raise typer.BadParameter(f"{path} is not a directory")
+    return path
 
 
 option_server_url: str = typer.Option(
@@ -57,46 +66,56 @@ option_client_key: str = typer.Option(
 )
 
 
-@aptly_app.command(name="push", help="Push debian sources packages to aptly repository")
+@contextmanager
+def client_factory(
+    server_url: str, ca_cert: str, client_cert: str, client_key: str
+) -> Iterator[AptlyClient]:
+    with TemporaryDirectory(prefix="wakemebot_") as base_directory:
+        ca_cert_path = Path(base_directory) / "ca.crt"
+        ca_cert_path.write_bytes(base64.b64decode(ca_cert))
+        client_cert_path = Path(base_directory) / "client.crt"
+        client_cert_path.write_bytes(base64.b64decode(client_cert))
+        client_key_path = Path(base_directory) / "client.key"
+        client_key_path.write_bytes(base64.b64decode(client_key))
+        credentials = MTLSCredentials(ca_cert_path, client_cert_path, client_key_path)
+        yield AptlyClient(server_url, credentials=credentials)
+
+
+@aptly_app.command(
+    name="push", help="Push debian sources packages to matched aptly repositories"
+)
 def aptly_push(
-    repository: str = typer.Argument(..., help="Aptly repository name"),
+    repos_regex: str = typer.Argument(..., help="Aptly repository name or regex pattern"),
     package_directory: Path = typer.Argument(
-        ..., help="Directory containing debian packages to upload"
-    ),
-    retain: int = typer.Option(
-        100, help="For each package, how many versions will be kept"
+        ...,
+        help="Directory containing debian packages to upload",
+        callback=package_directory_callback,
     ),
     server_url: str = option_server_url,
     ca_cert: str = option_ca_cert,
     client_cert: str = option_client_cert,
     client_key: str = option_client_key,
 ) -> None:
-    aptly.push(
-        repository,
-        package_directory,
-        retain,
-        server_url,
-        ca_cert,
-        client_cert,
-        client_key,
-    )
+    packages = package_directory.glob("*.deb")
+    with client_factory(server_url, ca_cert, client_cert, client_key) as client:
+        repositories = [repo.name for repo in client.repo_list()]
+        repositories = [repo for repo in repositories if re.match(repos_regex, repo)]
+        with client.files_upload(packages) as upload_directory:
+            for repository in repositories:
+                client.repo_add_packages(repository, upload_directory)
 
 
 @aptly_app.command(name="publish", help="Publish aptly repository")
 def aptly_publish(
-    repository: str = typer.Argument(..., help="Aptly repository name"),
+    prefix: str = typer.Argument(..., help="Aptly publish prefix"),
     server_url: str = option_server_url,
     ca_cert: str = option_ca_cert,
     client_cert: str = option_client_cert,
     client_key: str = option_client_key,
+    gpg_key: str = "wakemebot@protonmail.com",
 ) -> None:
-    aptly.publish(
-        repository,
-        server_url,
-        ca_cert,
-        client_cert,
-        client_key,
-    )
+    with client_factory(server_url, ca_cert, client_cert, client_key) as client:
+        client.publish_update(prefix, gpg_key=gpg_key)
 
 
 app.add_typer(aptly_app, name="aptly")

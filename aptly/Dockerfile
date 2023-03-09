@@ -1,18 +1,11 @@
-FROM ubuntu:18.04
+FROM wakemeops/minideb:bullseye
 
-ENV LC_ALL=C.UTF-8
-ENV LANG=C.UTF-8
-ENV DEBIAN_FRONTEND=noninteractive
-
-RUN apt-get update \
-    && apt-get install -y wget apt-utils gnupg2 gpgv2 bash \
-    && rm -rf /var/lib/apt/lists/*
-
-RUN echo "deb http://repo.aptly.info/ squeeze main" >> /etc/apt/sources.list \
-    && wget -qO - https://www.aptly.info/pubkey.txt | apt-key add - \
-    && apt-get update \
-    && apt-get install -y aptly \
-    && rm -rf /var/lib/apt/lists/*
+RUN install_packages wget apt-utils gnupg2 gpgv2 bash aptly
 
 RUN useradd --create-home --uid 1000 albert
+
 USER 1000
+
+HEALTHCHECK --interval=1m --timeout=30s --retries=3 CMD gpg --list-secret-keys || kill 1
+
+CMD ["aptly","api", "serve", "-listen=:8080", "-no-lock"]
