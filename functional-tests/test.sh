@@ -8,4 +8,4 @@ export WAKEMEBOT_APTLY_CLIENT_KEY=LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tCk1JSUV2QU
 
 export WAKEMEBOT_APTLY_SERVER_URL=https://localhost:40000/api
 
-wakemebot sync ./build --publish-prefix ":."
+wakemebot sync ./build --publish-prefix ":./stable"

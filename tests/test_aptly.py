@@ -248,9 +248,10 @@ def test_publish_update__does_put_request_with_prefix_on_publish_endpoint(httpx_
         url="http://test_url/publish/myprefix:.",
     )
 
-    expected_request_dict = [
-        {"ForceOverwrite": True, "Signing": {"GpgKey": "mykey", "Batch": True}}
-    ]
+    expected_request_dict = {
+        "ForceOverwrite": True,
+        "Signing": {"GpgKey": "mykey", "Batch": True},
+    }
 
     # When
     client = AptlyClient("http://test_url")

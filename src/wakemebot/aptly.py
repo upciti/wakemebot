@@ -170,12 +170,10 @@ class AptlyClient:
 
     def publish_update(self, prefix: str, gpg_key: str | None = None) -> None:
         try:
-            json = (
-                {
-                    "ForceOverwrite": True,
-                    "Signing": {"GpgKey": gpg_key, "Batch": True},
-                },
-            )
+            json = {
+                "ForceOverwrite": True,
+                "Signing": {"GpgKey": gpg_key, "Batch": True},
+            }
             response = self._client.put(f"/publish/{prefix}", json=json)
         except httpx.HTTPError as e:
             raise AptlyClientError(str(e))
