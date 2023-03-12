@@ -3,13 +3,14 @@ import re
 from contextlib import contextmanager
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import Iterator, Optional
+from typing import Generator, Optional
 
 import typer
 from pydantic import BaseModel, Field, HttpUrl
 
 from wakemebot import __version__
 from wakemebot.aptly import AptlyClient, MTLSCredentials
+from wakemebot.sync import parse_op2deb_delta, remove_packages_from_repos
 
 app = typer.Typer()
 aptly_app = typer.Typer()
@@ -69,7 +70,7 @@ option_client_key: str = typer.Option(
 @contextmanager
 def client_factory(
     server_url: str, ca_cert: str, client_cert: str, client_key: str
-) -> Iterator[AptlyClient]:
+) -> Generator[AptlyClient, None, None]:
     with TemporaryDirectory(prefix="wakemebot_") as base_directory:
         ca_cert_path = Path(base_directory) / "ca.crt"
         ca_cert_path.write_bytes(base64.b64decode(ca_cert))
@@ -103,6 +104,19 @@ def aptly_push(
         with client.files_upload(packages) as upload_directory:
             for repository in repositories:
                 client.repo_add_packages(repository, upload_directory)
+
+
+@aptly_app.command(name="sync", help="Remove packages using ops2deb delta output")
+def aptly_sync(
+    server_url: str = option_server_url,
+    ca_cert: str = option_ca_cert,
+    client_cert: str = option_client_cert,
+    client_key: str = option_client_key,
+    ops2deb_delta_path: Path = typer.Argument(..., help="Path to ops2deb delta file"),
+) -> None:
+    delta = parse_op2deb_delta(ops2deb_delta_path)
+    with client_factory(server_url, ca_cert, client_cert, client_key) as client:
+        remove_packages_from_repos(client, delta)
 
 
 @aptly_app.command(name="publish", help="Publish aptly repository")
