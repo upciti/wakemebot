@@ -111,7 +111,12 @@ class AptlyClient:
             file_descriptors = {path.name: path.open("rb") for path in package_paths}
         except OSError as e:
             raise AptlyClientError(str(e))
-        response = self._client.post(f"/files/{upload_directory}", files=file_descriptors)
+        try:
+            response = self._client.post(
+                f"/files/{upload_directory}", files=file_descriptors
+            )
+        except httpx.HTTPError as e:
+            raise AptlyClientError(str(e))
         self.raise_for_status(response)
         try:
             yield upload_directory
@@ -153,9 +158,12 @@ class AptlyClient:
         self.raise_for_status(response)
 
     def repo_add_packages(self, repo_name: str, upload_directory: str) -> None:
-        response = self._client.post(
-            f"/repos/{repo_name}/file/{upload_directory}?noRemove=1"
-        )
+        try:
+            response = self._client.post(
+                f"/repos/{repo_name}/file/{upload_directory}?noRemove=1"
+            )
+        except httpx.HTTPError as e:
+            raise AptlyClientError(str(e))
         self.raise_for_status(
             response, {404: _REPO_DOES_NOT_EXIST_ERROR.format(repo_name)}
         )

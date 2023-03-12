@@ -2,7 +2,7 @@ from pathlib import Path
 
 from pydantic import BaseModel
 
-from wakemebot.aptly import AptlyClient, AptlyPackageRef
+from wakemebot.aptly import AptlyClient, AptlyClientError, AptlyPackageRef
 
 
 class Package(BaseModel):
@@ -21,7 +21,11 @@ def parse_op2deb_delta(path: Path) -> Ops2debDelta:
 
 
 def remove_packages_from_repos(client: AptlyClient, delta: Ops2debDelta) -> None:
-    repositories = client.repo_list()
+    try:
+        repositories = client.repo_list()
+    except AptlyClientError as e:
+        print(f"Failed to list aptly repositories: {e}")
+        return
     for repo in repositories:
         repo_packages = client.repo_list_packages(repo.name)
         to_remove: list[AptlyPackageRef] = []
@@ -33,7 +37,10 @@ def remove_packages_from_repos(client: AptlyClient, delta: Ops2debDelta) -> None
                     and repo_package.arch == package.architecture
                 ):
                     to_remove.append(repo_package)
-        client.repo_remove_packages(repo.name, to_remove)
+        try:
+            client.repo_remove_packages(repo.name, to_remove)
+        except AptlyClientError as e:
+            print(f"Failed to remove packages from repo {repo.name}: {e}")
 
 
 def add_packages_to_repos(
@@ -41,5 +48,17 @@ def add_packages_to_repos(
 ) -> None:
     for package in package_directory.glob("**/*.deb"):
         component = package.parent.name
-        with client.files_upload([package]) as upload_directory:
-            client.repo_add_packages(f"{repos_prefix}{component}", upload_directory)
+        try:
+            with client.files_upload([package]) as upload_directory:
+                client.repo_add_packages(f"{repos_prefix}{component}", upload_directory)
+        except AptlyClientError as e:
+            print(f"Failed to add package {package}: {e}")
+
+
+def update_debian_repository(
+    client: AptlyClient, publish_prefix: str, gpg_key: str
+) -> None:
+    try:
+        client.publish_update(publish_prefix, gpg_key=gpg_key)
+    except AptlyClientError as e:
+        print(f"Failed to to update debian repository: {e}")

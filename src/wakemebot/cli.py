@@ -13,6 +13,7 @@ from wakemebot.sync import (
     add_packages_to_repos,
     parse_op2deb_delta,
     remove_packages_from_repos,
+    update_debian_repository,
 )
 
 app = typer.Typer()
@@ -113,7 +114,7 @@ def aptly_sync(
     with client_factory(server_url, ca_cert, client_cert, client_key) as client:
         add_packages_to_repos(client, package_directory, repos_prefix)
         remove_packages_from_repos(client, delta)
-        client.publish_update(publish_prefix, gpg_key=gpg_key)
+        update_debian_repository(client, publish_prefix, gpg_key=gpg_key)
 
 
 def main() -> None:
