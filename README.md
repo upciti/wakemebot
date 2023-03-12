@@ -11,9 +11,7 @@ Bunch of tools needed in [wakemeops](https://github.com/upciti/wakemeops) CI pip
 
 Commands used to update wakemeops Debian repository:
 
-- `wakemebot aptly push`: push new packages to aptly repo.
-- `wakemebot aptly remove`: remove packages from aptly repo.
-- `wakemebot aptly publish`: update published prefix.
+- `wakemebot sync`: Sync state of debian repository with packages defined op2deb blueprints
 
 Documentation at https://docs.wakemeops.com is updated by running `mkdocs build`
 
@@ -22,11 +20,10 @@ Documentation at https://docs.wakemeops.com is updated by running `mkdocs build`
 Start aptly sandbox, create a repo, push packages:
 
 ```shell
-cd aptly
+poetry shell
+cd functional-tests
 docker-compose up
-docker-compose exec aptly aptly repo create wakemeops-devops
-cd ..
-poetry run wakemebot aptly push wakemeops-devops output --server aptly/aptly.sock
+./test.sh
 ```
 
 ## Building WakeMeOps documentation

@@ -1,6 +1,6 @@
 from pathlib import Path
 from textwrap import dedent
-from unittest.mock import Mock, call
+from unittest.mock import MagicMock, Mock, call
 
 import pytest
 
@@ -8,6 +8,7 @@ from wakemebot.aptly import AptlyPackageRef
 from wakemebot.sync import (
     Ops2debDelta,
     Package,
+    add_packages_to_repos,
     parse_op2deb_delta,
     remove_packages_from_repos,
 )
@@ -75,4 +76,26 @@ def test_remove_packages_from_repos__calls_aptly_client_remove_packages(
     # Then
     client.repo_remove_packages.assert_has_calls(
         [call("repo0", [package0]), call("repo1", [package0])]
+    )
+
+
+def test_add_packages_to_repos__adds_packages_to_the_appropriate_aptly_repository(
+    tmp_path,
+):
+    # Given
+    client = MagicMock()
+    client.files_upload.return_value.__enter__.return_value = "someuuid"
+    package0 = tmp_path / "devops" / "package0.deb"
+    package1 = tmp_path / "terminal" / "package1.deb"
+    package0.parent.mkdir()
+    package0.touch()
+    package1.parent.mkdir()
+    package1.touch()
+
+    # When
+    add_packages_to_repos(client, tmp_path, "wakemeops-")
+
+    # Then
+    client.repo_add_packages.assert_has_calls(
+        [call("wakemeops-devops", "someuuid"), call("wakemeops-terminal", "someuuid")]
     )

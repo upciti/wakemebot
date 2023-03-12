@@ -5,8 +5,6 @@ services:
     build:
       context: .
     restart: always
-    volumes:
-      - .:/var/lib/aptly
 
   nginx:
     image: nginx

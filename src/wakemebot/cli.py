@@ -1,5 +1,4 @@
 import base64
-import re
 from contextlib import contextmanager
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -10,7 +9,11 @@ from pydantic import BaseModel, Field, HttpUrl
 
 from wakemebot import __version__
 from wakemebot.aptly import AptlyClient, MTLSCredentials
-from wakemebot.sync import parse_op2deb_delta, remove_packages_from_repos
+from wakemebot.sync import (
+    add_packages_to_repos,
+    parse_op2deb_delta,
+    remove_packages_from_repos,
+)
 
 app = typer.Typer()
 aptly_app = typer.Typer()
@@ -82,57 +85,35 @@ def client_factory(
         yield AptlyClient(server_url, credentials=credentials)
 
 
-@aptly_app.command(
-    name="push", help="Push debian sources packages to matched aptly repositories"
+@app.command(
+    name="sync",
+    help="Sync state of debian repository with packages defined in ops2deb blueprints."
+    "Uses ops2deb delta output to know which packages need to be removed."
+    "Add adds packages in package directory to the appropriate aptly repository",
 )
-def aptly_push(
-    repos_regex: str = typer.Argument(..., help="Aptly repository name or regex pattern"),
-    package_directory: Path = typer.Argument(
-        ...,
-        help="Directory containing debian packages to upload",
-        callback=package_directory_callback,
-    ),
-    server_url: str = option_server_url,
-    ca_cert: str = option_ca_cert,
-    client_cert: str = option_client_cert,
-    client_key: str = option_client_key,
-) -> None:
-    packages = package_directory.glob("*.deb")
-    with client_factory(server_url, ca_cert, client_cert, client_key) as client:
-        repositories = [repo.name for repo in client.repo_list()]
-        repositories = [repo for repo in repositories if re.match(repos_regex, repo)]
-        with client.files_upload(packages) as upload_directory:
-            for repository in repositories:
-                client.repo_add_packages(repository, upload_directory)
-
-
-@aptly_app.command(name="sync", help="Remove packages using ops2deb delta output")
 def aptly_sync(
     server_url: str = option_server_url,
     ca_cert: str = option_ca_cert,
     client_cert: str = option_client_cert,
     client_key: str = option_client_key,
-    ops2deb_delta_path: Path = typer.Argument(..., help="Path to ops2deb delta file"),
-) -> None:
-    delta = parse_op2deb_delta(ops2deb_delta_path)
-    with client_factory(server_url, ca_cert, client_cert, client_key) as client:
-        remove_packages_from_repos(client, delta)
-
-
-@aptly_app.command(name="publish", help="Publish aptly repository")
-def aptly_publish(
-    prefix: str = typer.Argument(..., help="Aptly publish prefix"),
-    server_url: str = option_server_url,
-    ca_cert: str = option_ca_cert,
-    client_cert: str = option_client_cert,
-    client_key: str = option_client_key,
+    publish_prefix: str = typer.Option(
+        "s3:wakemeops-eu-west-3:wakemeops/stable", help="Aptly publish prefix"
+    ),
     gpg_key: str = "wakemebot@protonmail.com",
+    repos_prefix: str = typer.Option(
+        "wakemeops-", help="Aptly repository name or regex pattern"
+    ),
+    package_directory: Path = typer.Argument(
+        ...,
+        help="Directory containing debian packages to add and ops2deb-delta.json",
+        callback=package_directory_callback,
+    ),
 ) -> None:
+    delta = parse_op2deb_delta(package_directory / "ops2deb-delta.json")
     with client_factory(server_url, ca_cert, client_cert, client_key) as client:
-        client.publish_update(prefix, gpg_key=gpg_key)
-
-
-app.add_typer(aptly_app, name="aptly")
+        add_packages_to_repos(client, package_directory, repos_prefix)
+        remove_packages_from_repos(client, delta)
+        client.publish_update(publish_prefix, gpg_key=gpg_key)
 
 
 def main() -> None:
